@@ -12,6 +12,7 @@ import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import SettingsSystemDaydreamOutlinedIcon from "@mui/icons-material/SettingsSystemDaydreamOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import Link from 'next/link'
 
 const Sidebar = () => {
     return (
@@ -25,7 +26,7 @@ const Sidebar = () => {
                     <p className={style.title}>Main</p>
                     <li>
                         <DashboardIcon className={style.icon} />
-                        <span>Dashboard</span>
+                        <Link href="/admin" replace={true}><span>Dashboard</span></Link>
                     </li>
                     <p className={style.title}>Lists</p>
                     <li>
@@ -34,7 +35,7 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <StoreIcon className={style.icon} />
-                        <span>Products</span>
+                        <Link href="/admin/events" replace={true}><span>Events</span></Link>
                     </li>
                     <li>
                         <CreditCardIcon className={style.icon} />
