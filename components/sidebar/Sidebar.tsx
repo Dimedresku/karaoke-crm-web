@@ -1,88 +1,74 @@
 import React from 'react';
 import style from "./Sidebar.module.scss"
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import StoreIcon from "@mui/icons-material/Store";
-import InsertChartIcon from "@mui/icons-material/InsertChart";
-import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import SettingsSystemDaydreamOutlinedIcon from "@mui/icons-material/SettingsSystemDaydreamOutlined";
-import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import Link from 'next/link'
+
+import BarChartIcon from '@mui/icons-material/BarChart';
+import {Divider, Drawer, Stack} from "@mui/material";
+import {Scrollbar} from "../Scrollbar";
+import SideBarNavItem from "../../layouts/dashboard/SideBarNavItem";
+import { usePathname } from 'next/navigation';
 
 const Sidebar = () => {
+    const pathname = usePathname();
+
+    const content = (
+        <Scrollbar
+        sx={{
+            height: '100%',
+            '& .simplebar-content': {
+                height: '100%'
+            },
+            '& .simplebar-scrollbar:before': {
+                background: '#9DA4AE'
+            }
+        }}>
+            <div className={style.sideBar}>
+                <Stack>
+                    <div className={style.top}>
+                        <h1 className={style.logo}>LOGO</h1>
+                    </div>
+                    <Divider sx={{backgroundColor: "#2F3746"}}/>
+                    <div className={style.center}>
+                        <ul>
+                            <SideBarNavItem
+                                active={pathname == "/admin"}
+                                text="Dashboard"
+                                href="/admin"
+                                icon={<BarChartIcon className={style.icon} />} />
+                            <SideBarNavItem
+                                active={pathname == "/admin/actions"}
+                                text="Actions"
+                                href="/admin/actions"
+                                icon={<PersonOutlineIcon className={style.icon} />} />
+                            <SideBarNavItem
+                                active={pathname == "/admin/events"}
+                                text="Events"
+                                href="/admin/events"
+                                icon={<StoreIcon className={style.icon} />} />
+                        </ul>
+                    </div>
+                    <Divider sx={{backgroundColor: "#2F3746"}}/>
+                </Stack>
+            </div>
+        </Scrollbar>
+    )
+
     return (
-        <div className={style.sideBar}>
-            <div className={style.top}>
-                <h1 className={style.logo}>LOGO</h1>
-            </div>
-            <hr />
-            <div className={style.center}>
-                <ul>
-                    <p className={style.title}>Main</p>
-                    <li>
-                        <DashboardIcon className={style.icon} />
-                        <Link href="/admin" replace={true}><span>Dashboard</span></Link>
-                    </li>
-                    <p className={style.title}>Lists</p>
-                    <li>
-                        <PersonOutlineIcon className={style.icon} />
-                        <span>Users</span>
-                    </li>
-                    <li>
-                        <StoreIcon className={style.icon} />
-                        <Link href="/admin/events" replace={true}><span>Events</span></Link>
-                    </li>
-                    <li>
-                        <CreditCardIcon className={style.icon} />
-                        <span>Orders</span>
-                    </li>
-                    <p className={style.title}>Useful</p>
-                    <li>
-                        <InsertChartIcon className={style.icon} />
-                        <span>Stats</span>
-                    </li>
-                    <li>
-                        <LocalShippingIcon className={style.icon} />
-                        <span>Delivery</span>
-                    </li>
-                    <li>
-                        <NotificationsNoneIcon className={style.icon} />
-                        <span>Notifications</span>
-                    </li>
-                    <p className={style.title}>SERVICE</p>
-                    <li>
-                        <SettingsSystemDaydreamOutlinedIcon className={style.icon} />
-                        <span>System Health</span>
-                    </li>
-                    <li>
-                        <PsychologyOutlinedIcon className={style.icon} />
-                        <span>Logs</span>
-                    </li>
-                    <li>
-                        <SettingsApplicationsIcon className={style.icon} />
-                        <span>Settings</span>
-                    </li>
-                    <p className={style.title}>USER</p>
-                    <li>
-                        <AccountCircleOutlinedIcon className={style.icon} />
-                        <span>Profile</span>
-                    </li>
-                    <li>
-                        <ExitToAppIcon className={style.icon} />
-                        <span>Logout</span>
-                    </li>
-                </ul>
-            </div>
-            <div className={style.bottom}>
-                <div className={style.colorOption}></div>
-                <div className={style.colorOption}></div>
-            </div>
-        </div>
+        <Drawer
+            anchor="left"
+            open
+            PaperProps={{
+                sx: {
+                    backgroundColor: "#1C2536",
+                    width: 280,
+                    color: "white"
+                }
+            }}
+            variant="permanent"
+        >
+            {content}
+        </Drawer>
     );
 };
 

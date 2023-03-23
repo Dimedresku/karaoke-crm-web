@@ -1,8 +1,6 @@
 .sideBar {
-  flex: 1;
   border-right: 2px solid lightgray;
   min-height: 100vh;
-  background-color: white;
 
   .top {
     height: 50px;
@@ -18,11 +16,7 @@
   }
 
   .center {
-    padding: 0 20px;
-
-    a {
-      text-decoration: none;
-    }
+    padding: 24px 16px;
 
     ul {
       list-style: none;
@@ -31,24 +25,26 @@
         display: flex;
         align-items: center;
         cursor: pointer;
-        padding: 5px;
+        padding: 2px 0;
+        width: 100%;
 
-        &:hover {
-          background-color: #ece8ff;
+        button {
+          padding: 6px 16px;
+          border-radius: 6px;
+        }
+
+        a {
+          color: #9DA4AE;
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 24px;
+          white-space: nowrap;
+          text-decoration: none;
         }
 
         .icon {
           font-size: 18px;
-          color: #7451f8;
         }
-
-        span {
-          font-size: 13px;
-          font-weight: 600;
-          color: #888;
-          margin-left: 10px;
-        }
-
       }
 
     }

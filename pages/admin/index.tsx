@@ -1,12 +1,12 @@
 import React, {ReactElement} from 'react';
 
-import style from  "../../styles/Admin.module.scss"
+import style from "../../styles/admin/Admin.module.scss"
 import Widget from "../../components/widget/Widget";
-import Featured from "../../components/featured/Featured";
-import Chart from "../../components/chart/Chart";
 import List from "../../components/list/List";
 import DashboardLayout from "../../layouts/dashboard/layout";
-import {threadId} from "worker_threads";
+import {OverviewSales} from "../../components/overview-chart/OverviewChart";
+import  {AuthJWTService } from "../../service/auth/authJWTService";
+import { NextApiRequest, NextApiResponse } from "next";
 
 const AdminPage = () => {
     return (
@@ -18,8 +18,18 @@ const AdminPage = () => {
                 <Widget type="balance" />
             </div>
             <div className={style.charts}>
-                <Featured />
-                <Chart />
+                <OverviewSales
+                    chartSeries={[
+                        {
+                            name: 'This year',
+                            data: [18, 16, 5, 8, 3, 14, 14, 16, 17, 19, 18, 20]
+                        },
+                        {
+                            name: 'Last year',
+                            data: [12, 11, 4, 6, 2, 9, 9, 10, 11, 12, 13, 13]
+                        }
+                    ]}
+                    sx={{ height: '100%', width: '100%', borderRadius: 5, padding: 2 }} />
             </div>
             <div className={style.listContainer}>
                 <div className={style.listTitle}>Latest Transactions</div>
@@ -35,6 +45,31 @@ AdminPage.getLayout = (page: ReactElement) => {
             {page}
         </DashboardLayout>
     )
+}
+
+type ServerSideProps = {
+    req: NextApiRequest,
+    res: NextApiResponse
+}
+
+export const getServerSideProps = async ({req, res}: ServerSideProps) => {
+    const authService = AuthJWTService()
+    const redirectObject = {
+        redirect: {
+            destination: "/admin/login",
+            permanent: false,
+        }
+    }
+
+    const isAuth = await authService.isAuthUser(req, res)
+    if (!isAuth) {
+        return redirectObject
+    }
+
+    return  {
+        props: {}
+    }
+
 }
 
 export default AdminPage;

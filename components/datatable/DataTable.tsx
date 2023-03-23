@@ -5,14 +5,15 @@ import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 const DataTable = () => {
 
     const columns: GridColDef[] = [
-        { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'firstName', headerName: 'First name', width: 130 },
-        { field: 'lastName', headerName: 'Last name', width: 130 },
+        { field: 'id', headerName: 'ID', width: 70, editable: false },
+        { field: 'firstName', headerName: 'First name', width: 130, editable: false },
+        { field: 'lastName', headerName: 'Last name', width: 130, editable: false },
         {
             field: 'age',
             headerName: 'Age',
             type: 'number',
             width: 90,
+            editable: false
         },
         {
             field: 'fullName',
@@ -20,6 +21,7 @@ const DataTable = () => {
             description: 'This column has a value getter and is not sortable.',
             sortable: false,
             width: 160,
+            editable: false,
             valueGetter: (params: GridValueGetterParams) =>
                 `${params.row.firstName || ''} ${params.row.lastName || ''}`,
         },
@@ -42,12 +44,10 @@ const DataTable = () => {
             <DataGrid
                 rows={rows}
                 columns={columns}
+                pageSize={5}
+                rowsPerPageOptions={[5]}
                 checkboxSelection
-                initialState={{
-                    pagination: {
-                        paginationModel: {pageSize: 5, page: 0}
-                    }
-                }}
+                // isCellEditable={() => false}
             />
         </div>
     );
