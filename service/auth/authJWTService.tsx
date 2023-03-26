@@ -3,7 +3,6 @@ import {
     OpenAPI,
     Body_login_api_auth_login_post,
 } from "../../openaip"
-import Cookies from 'cookies'
 
 
 export const AuthJWTService = () => {
@@ -15,7 +14,9 @@ export const AuthJWTService = () => {
         try {
             const response = await AuthService.loginApiAuthLoginPost(credentials)
             if (response.status == 'success') {
-                return response.access_token
+                const accessToken = response.access_token
+                setToken(accessToken)
+                return accessToken
             } else {
                 throw new Error("Invalid credentials")
             }
@@ -52,9 +53,7 @@ export const AuthJWTService = () => {
         await AuthService.logoutApiAuthLogoutGet()
     }
 
-    const isAuthUser = async (req: any, res: any) => {
-        const cookies = new Cookies(req, res)
-        const token = cookies.get("access_token")
+    const isAuthUser = async (token: string) => {
         if (!token) {
             return false
         }
@@ -63,9 +62,18 @@ export const AuthJWTService = () => {
         return !!username;
     }
 
+    const setToken = (token: string) => {
+        localStorage.setItem('access_token', token)
+    }
+
+    const getToken = () => {
+        return localStorage.getItem('access_token')
+    }
+
     return {
         login,
         logout,
         isAuthUser,
+        getToken
     }
 }

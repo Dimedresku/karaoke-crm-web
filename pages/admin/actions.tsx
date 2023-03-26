@@ -14,6 +14,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import AlertDialog from "../../components/AlertModal/AlertModal";
 import {NextApiRequest, NextApiResponse} from "next";
 import {AuthJWTService} from "../../service/auth/authJWTService";
+// @ts-ignore
+import Cookies from 'cookies'
 
 const now = new Date();
 
@@ -283,6 +285,9 @@ type ServerSideProps = {
 
 export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const authService = AuthJWTService()
+    const cookies = new Cookies(req, res)
+    const token = cookies.get("access_token")
+
     const redirectObject = {
         redirect: {
             destination: "/admin/login",
@@ -290,7 +295,7 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         }
     }
 
-    const isAuth = await authService.isAuthUser(req, res)
+    const isAuth = await authService.isAuthUser(token)
     if (!isAuth) {
         return redirectObject
     }

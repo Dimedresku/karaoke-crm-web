@@ -2,7 +2,7 @@ import React from 'react';
 import style from "./Sidebar.module.scss"
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import StoreIcon from "@mui/icons-material/Store";
-
+import LayersIcon from '@mui/icons-material/Layers';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import {Divider, Drawer, Stack} from "@mui/material";
 import {Scrollbar} from "../Scrollbar";
@@ -40,12 +40,17 @@ const Sidebar = () => {
                                 active={pathname == "/admin/actions"}
                                 text="Actions"
                                 href="/admin/actions"
-                                icon={<PersonOutlineIcon className={style.icon} />} />
+                                icon={<LayersIcon className={style.icon} />} />
                             <SideBarNavItem
                                 active={pathname == "/admin/events"}
                                 text="Events"
                                 href="/admin/events"
                                 icon={<StoreIcon className={style.icon} />} />
+                            <SideBarNavItem
+                                active={pathname == "/admin/users"}
+                                text="Users"
+                                href="/admin/users"
+                                icon={<PersonOutlineIcon className={style.icon} />} />
                         </ul>
                     </div>
                     <Divider sx={{backgroundColor: "#2F3746"}}/>

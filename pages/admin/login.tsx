@@ -33,7 +33,7 @@ const Page = () => {
                 </title>
             </Head>
             <Box sx={{
-                    backgroundColor: 'background.paper',
+                    backgroundColor: 'white',
                     flex: '1 1 auto',
                     alignItems: 'center',
                     display: 'flex',
@@ -80,13 +80,14 @@ const Page = () => {
                                     type="password"
                                 />
                             </Stack>
-                            <FormHelperText sx={{ mt: 1 }}>
-                                Optionally you can skip.
-                            </FormHelperText>
                             <Button
                                 fullWidth
                                 size="large"
-                                sx={{ mt: 3 }}
+                                sx={{
+                                    mt: 3,
+                                    borderRadius: 3,
+                                    backgroundColor: 'rgb(99, 102, 241)'
+                                }}
                                 variant="contained"
                                 onClick={handleSubmit}
                             >

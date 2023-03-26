@@ -4,8 +4,8 @@ export const useModalState = () => {
     const [formData, setFormData] = useState({})
     const [open, setOpen] = useState(false)
 
-    const handleClickOpen = (customer: any) => {
-        setFormData(customer)
+    const handleClickOpen = (record: any) => {
+        setFormData(record)
         setOpen(true);
     };
 

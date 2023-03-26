@@ -24,7 +24,7 @@ export const Layout = (props) => {
                     xs={12}
                     lg={6}
                     sx={{
-                        backgroundColor: 'background.paper',
+                        backgroundColor: 'white',
                         display: 'flex',
                         flexDirection: 'column',
                         position: 'relative'

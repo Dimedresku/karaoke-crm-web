@@ -1,13 +1,14 @@
 import React, {ReactElement, useCallback, useMemo, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
-import DataTable from "../../components/datatable/DataTable";
 import {GridColDef, GridValueGetterParams} from "@mui/x-data-grid";
 import {CustomersTable, TableRow} from "../../components/customtable/customtable";
 import {useSelection} from "../../hooks/use-selection";
 import {applyPagination} from "../../utils/apply-paginations";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import {NextApiRequest, NextApiResponse} from "next";
+// @ts-ignore
+import Cookies from 'cookies'
 
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 70, editable: false },
@@ -140,6 +141,9 @@ type ServerSideProps = {
 
 export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const authService = AuthJWTService()
+    const cookies = new Cookies(req, res)
+    const token = cookies.get("access_token")
+
     const redirectObject = {
         redirect: {
             destination: "/admin/login",
@@ -147,7 +151,7 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         }
     }
 
-    const isAuth = await authService.isAuthUser(req, res)
+    const isAuth = await authService.isAuthUser(token)
     if (!isAuth) {
         return redirectObject
     }

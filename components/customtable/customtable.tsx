@@ -92,17 +92,17 @@ export const CustomersTable = (props: CustomTableProps) => {
                                         }}
                                     />
                                 </TableCell>
-                                {headConf.map((cellName: string) => <TableCell>{cellName}</TableCell>)}
+                                {headConf.map((cellName: string) => <TableCell key={cellName} >{cellName}</TableCell>)}
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {items.map((customer) => {
-                                const isSelected = selected.includes(customer.id);
+                            {items.map((record) => {
+                                const isSelected = selected.includes(record.id);
 
                                 return (
                                     <TableRow
                                         hover
-                                        key={customer.id}
+                                        key={record.id}
                                         selected={isSelected}
                                     >
                                         <TableCell padding="checkbox">
@@ -110,9 +110,9 @@ export const CustomersTable = (props: CustomTableProps) => {
                                                 checked={isSelected}
                                                 onChange={(event) => {
                                                     if (event.target.checked) {
-                                                        onSelectOne?.(customer.id);
+                                                        onSelectOne?.(record.id);
                                                     } else {
-                                                        onDeselectOne?.(customer.id);
+                                                        onDeselectOne?.(record.id);
                                                     }
                                                 }}
                                             />
@@ -120,15 +120,15 @@ export const CustomersTable = (props: CustomTableProps) => {
                                         {rowsConf.map((conf, idx) => {
                                             let cellResult = 'test'
                                             if (conf.handleFunc) {
-                                                cellResult = conf.handleFunc(customer)
+                                                cellResult = conf.handleFunc(record)
                                             } else if (conf.fieldName) {
                                                 // @ts-ignore
-                                                cellResult = customer[conf.fieldName]
+                                                cellResult = record[conf.fieldName]
                                             }
                                             if (conf.click) {
                                                 return (
-                                                    <TableCell key={`${customer.id}-${idx}`}
-                                                               onClick={() => conf.clickHandle(customer)}
+                                                    <TableCell key={`${record.id}-${idx}`}
+                                                               onClick={() => conf.clickHandle(record)}
                                                                sx={{cursor: "pointer",
                                                                    textDecoration: "underline",
                                                                    "&:hover": {
@@ -137,7 +137,7 @@ export const CustomersTable = (props: CustomTableProps) => {
                                                                }}
                                                     >{cellResult}</TableCell>)
                                             } else {
-                                                return (<TableCell key={`${customer.id}-${idx}`}>{cellResult}</TableCell>)
+                                                return (<TableCell key={`${record.id}-${idx}`}>{cellResult}</TableCell>)
                                             }
                                         })}
                                     </TableRow>
