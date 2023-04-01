@@ -47,7 +47,7 @@ type CustomTableProps = {
     headConf: Array<any>
 }
 
-export const CustomersTable = (props: CustomTableProps) => {
+export const CustomTable = (props: CustomTableProps) => {
     const {
         count = 0,
         items = [],
@@ -121,6 +121,8 @@ export const CustomersTable = (props: CustomTableProps) => {
                                             let cellResult = 'test'
                                             if (conf.handleFunc) {
                                                 cellResult = conf.handleFunc(record)
+                                            } else if (conf.component) {
+                                                cellResult = conf.component(record)
                                             } else if (conf.fieldName) {
                                                 // @ts-ignore
                                                 cellResult = record[conf.fieldName]

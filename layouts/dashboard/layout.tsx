@@ -8,11 +8,12 @@ type LayoutProps = {
 }
 
 const DashboardLayout = ({children}: LayoutProps) => {
+    const {profileUser} = children.props
     return (
             <div className={style.adminPage}>
                 <Sidebar />
                 <div className={style.adminPageContainer}>
-                    <NavBar />
+                    <NavBar profileUser={profileUser} />
                     {children}
                 </div>
             </div>

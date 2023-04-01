@@ -5,7 +5,7 @@ import type { NextPage } from 'next'
 import 'simplebar-react/dist/simplebar.min.css';
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
-import "cropperjs/dist/cropper.css";
+import 'react-advanced-cropper/dist/style.css';
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode

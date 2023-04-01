@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useState, useRef, ReactElement, createContext} from 'react';
 import {Box, CircularProgress, Stack} from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import { useForm } from "react-hook-form";
-import TextInput from "../formComponents/textInput";
-import {createUser, updateUser, uploadAvatar} from "../../service/api/usersApi";
+import {SubmitHandler, useForm} from "react-hook-form";
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
@@ -16,7 +14,7 @@ import FilePondPluginImageCrop from "filepond-plugin-image-crop";
 import FilePondPluginImageResize from "filepond-plugin-image-resize";
 import FilePondPluginImageTransform from "filepond-plugin-image-transform";
 import FilePondPluginImageEdit from "filepond-plugin-image-edit";
-import styles from "./userForm.module.scss"
+import styles from "./adminForm.module.scss"
 import { Cropper, CropperRef, Coordinates } from 'react-advanced-cropper';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -36,10 +34,25 @@ registerPlugin(
 type UserFormProps = {
     formState: any,
     refresh: Function,
-    handleErrors: Function
+    handleErrors: Function,
+    defaultState: object,
+    submit: SubmitHandler<any>,
+    fields: Array<ReactElement>,
+    title: string
 }
 
-const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
+const FormContext = createContext({})
+
+const AdminForm = (
+    {
+        formState,
+        refresh,
+        handleErrors,
+        defaultState,
+        submit,
+        fields,
+        title
+    }: UserFormProps) => {
     const { handleSubmit, reset, control, formState: {errors}, setError } = useForm();
     const [image, setImage] = useState([]);
     const [openCrop, setCrop] = useState(false)
@@ -48,46 +61,10 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
     const cropperRef = useRef<CropperRef>(null);
     const filePond = useRef(null)
 
-    const defaultValue = {
-        id: '',
-        name: '',
-        username: '',
-        avatar: '',
-        password: '',
-        confirmPassword: ''
-    }
-
     useEffect(() => {
         let initData = formState.formData
-        reset({...defaultValue,...initData})
+        reset({...defaultState,...initData})
     }, [formState])
-
-    const submit = async (data: any) => {
-        try {
-            if (data.id) {
-                const response = await updateUser(data.id, data)
-                if (image.length > 0) {
-                    await uploadAvatar(data.id, image[0].file)
-                }
-            } else {
-                if (data.password !== data.confirmPassword) {
-                    setError("password", {type: "custom", message: "Check password"})
-                    setError("confirmPassword", {type: "custom", message: "Check password"})
-                    return
-                }
-                const response = await createUser(data)
-                if (image.length > 0) {
-                    const user_id = response.user.id
-                    await uploadAvatar(user_id, image[0].file)
-                }
-            }
-            formState.handleClose(reset)
-            refresh()
-            setImage([])
-        } catch (e) {
-            handleErrors({show: true, message: e.message, description: e.description})
-        }
-    }
 
     const editor = {
         open: (file, instructions) => {
@@ -140,33 +117,13 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
                         }
                     }}
             >
-                <DialogTitle>Пользователь</DialogTitle>
+                <DialogTitle>{title}</DialogTitle>
                 <DialogContent>
                     <Stack direction="row">
                         <form onSubmit={handleSubmit(submit)} className={styles.modalForm}>
-                            <TextInput name="name"
-                                       control={control}
-                                       error={errors.name}
-                                       label="Name"/>
-                            <TextInput name="username"
-                                       required={'Need username'}
-                                       error={errors.username}
-                                       control={control}
-                                       label="Username"/>
-                            {!formState.formData?.id &&
-                            <>
-                                <TextInput name="password"
-                                           required={"Incorrect password"}
-                                           control={control}
-                                           error={errors.password}
-                                           label="Password"/>
-                                <TextInput name="confirmPassword"
-                                           required={"Incorrect password"}
-                                           control={control}
-                                           error={errors.confirmPassword}
-                                           label="Confirm Password"/>
-                            </>
-                            }
+                            <FormContext.Provider value={{control: control, errors: errors}} >
+                                {fields}
+                            </FormContext.Provider>
                         </form>
                         <div className={styles.dragAndDropWrapper}>
                             <FilePond
@@ -247,4 +204,6 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
     );
 }
 
-export default UserForm;
+export default AdminForm;
+
+export {FormContext}

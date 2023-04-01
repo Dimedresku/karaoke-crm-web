@@ -16,7 +16,7 @@ import FilePondPluginImageCrop from "filepond-plugin-image-crop";
 import FilePondPluginImageResize from "filepond-plugin-image-resize";
 import FilePondPluginImageTransform from "filepond-plugin-image-transform";
 import FilePondPluginImageEdit from "filepond-plugin-image-edit";
-import styles from "./userForm.module.scss"
+import styles from "./eventForm.module.scss"
 import { Cropper, CropperRef, Coordinates } from 'react-advanced-cropper';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -33,13 +33,13 @@ registerPlugin(
     FilePondPluginImageEdit
 );
 
-type UserFormProps = {
+type EventFormProps = {
     formState: any,
     refresh: Function,
     handleErrors: Function
 }
 
-const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
+const EventForm = ({formState, refresh, handleErrors}: EventFormProps) => {
     const { handleSubmit, reset, control, formState: {errors}, setError } = useForm();
     const [image, setImage] = useState([]);
     const [openCrop, setCrop] = useState(false)
@@ -51,10 +51,9 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
     const defaultValue = {
         id: '',
         name: '',
-        username: '',
-        avatar: '',
-        password: '',
-        confirmPassword: ''
+        description: '',
+        published: false,
+        image: '',
     }
 
     useEffect(() => {
@@ -140,7 +139,7 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
                         }
                     }}
             >
-                <DialogTitle>Пользователь</DialogTitle>
+                <DialogTitle>Event</DialogTitle>
                 <DialogContent>
                     <Stack direction="row">
                         <form onSubmit={handleSubmit(submit)} className={styles.modalForm}>
@@ -148,25 +147,10 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
                                        control={control}
                                        error={errors.name}
                                        label="Name"/>
-                            <TextInput name="username"
-                                       required={'Need username'}
+                            <TextInput name="description"
                                        error={errors.username}
                                        control={control}
-                                       label="Username"/>
-                            {!formState.formData?.id &&
-                            <>
-                                <TextInput name="password"
-                                           required={"Incorrect password"}
-                                           control={control}
-                                           error={errors.password}
-                                           label="Password"/>
-                                <TextInput name="confirmPassword"
-                                           required={"Incorrect password"}
-                                           control={control}
-                                           error={errors.confirmPassword}
-                                           label="Confirm Password"/>
-                            </>
-                            }
+                                       label="Description"/>
                         </form>
                         <div className={styles.dragAndDropWrapper}>
                             <FilePond
@@ -178,11 +162,11 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
                                 maxFiles={1}
                                 name="files"
                                 labelIdle={`Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`}
-                                imagePreviewHeight={250}
+                                imagePreviewHeight={500}
                                 imageCropAspectRatio='1:1'
                                 imageResizeTargetWidth={300}
                                 imageResizeTargetHeight={300}
-                                stylePanelLayout='compact circle'
+                                stylePanelLayout='compact'
                                 styleLoadIndicatorPosition='center bottom'
                                 styleProgressIndicatorPosition='right bottom'
                                 styleButtonRemoveItemPosition='left bottom'
@@ -247,4 +231,4 @@ const UserForm = ({formState, refresh, handleErrors}: UserFormProps) => {
     );
 }
 
-export default UserForm;
+export default EventForm;

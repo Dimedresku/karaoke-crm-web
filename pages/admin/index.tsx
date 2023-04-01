@@ -72,8 +72,12 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         return redirectObject
     }
 
+    const user = await authService.getUser(token)
+
     return  {
-        props: {}
+        props: {
+            profileUser: user
+        }
     }
 
 }

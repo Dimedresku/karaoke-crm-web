@@ -5,4 +5,5 @@
 export type SystemUser = {
     username: string;
     id: number;
+    avatar?: string;
 };

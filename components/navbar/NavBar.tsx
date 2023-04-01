@@ -3,8 +3,13 @@ import style from "./NavBar.module.scss"
 import { Avatar } from "@mui/material";
 import { AccountPopover } from "../accountPopover/accountPopover";
 import { usePopover } from "../../hooks/usePopover";
+import {SystemUser} from "../../openaip";
 
-const NavBar = () => {
+type NavBarProps = {
+    profileUser: SystemUser
+}
+
+const NavBar = ({profileUser}: NavBarProps) => {
 
     const accountPopover = usePopover();
 
@@ -21,7 +26,7 @@ const NavBar = () => {
                                 height: 40,
                                 width: 40
                             }}
-                            src="/assets/avatars/avatar-anika-visser.png"
+                            src={`http://192.168.56.110:8080${profileUser?.avatar}`}
                         />
                     </div>
                 </div>
@@ -30,6 +35,7 @@ const NavBar = () => {
                 anchorEl={accountPopover.anchorRef.current}
                 open={accountPopover.open}
                 onClose={accountPopover.handleClose}
+                username={profileUser?.username}
             />
         </div>
     );

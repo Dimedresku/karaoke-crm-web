@@ -1,6 +1,5 @@
-import React, {ReactElement, useMemo, useState, useCallback, SyntheticEvent, ChangeEvent, useEffect} from 'react';
-import { subDays, subHours } from 'date-fns';
-import {CustomersTable, TableRow} from "../../components/customtable/customtable";
+import React, {ReactElement, useMemo, useState, useCallback, useEffect} from 'react';
+import {CustomTable, TableRow} from "../../components/customtable/customtable";
 import DashboardLayout from "../../layouts/dashboard/layout";
 import {applyPagination} from "../../utils/apply-paginations";
 import {useSelection} from "../../hooks/use-selection";
@@ -15,13 +14,12 @@ import {NextApiRequest, NextApiResponse} from "next";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import type { UserResponse } from '../../openaip/models/UserResponse';
 import styles from "../../styles/admin/Users.module.scss"
-import {getUsers} from "../../service/api/usersApi";
+import {getUsers, deleteUsers } from "../../service/api/usersApi";
 // @ts-ignore
 import Cookies from 'cookies'
 import { useRouter } from 'next/router';
-
-
-const now = new Date();
+import {Snackbar, Alert, Avatar} from "@mui/material";
+import {BaseUser} from "../../openaip";
 
 
 const useUsers = (page: number, rowsPerPage: number, data: Array<any>) => {
@@ -59,6 +57,7 @@ const Users = ({arrayUsers}: UsersProps) => {
     const [page, setPage] = useState(0);
     const [showAlert, setShowAlert] = useState(false)
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [alert, setAlert] = useState({show: false, message: "", description: ""})
     const users = useUsers(page, rowsPerPage, arrayUsers);
     const usersIds = useUserIds(users);
     const usersSelection = useSelection(usersIds);
@@ -66,9 +65,10 @@ const Users = ({arrayUsers}: UsersProps) => {
     const [deleteDisable, setDeleteDisable] = useState(true)
     const router = useRouter();
 
-    const deleteSelected = () => {
-        console.log(`Will be deleted`)
-        console.log(usersSelection.selected)
+    const deleteSelected = async () => {
+        await deleteUsers(usersSelection.selected)
+        usersSelection.handleDeselectAll()
+        refreshPage()
     }
 
     const refreshPage = () => {
@@ -84,7 +84,7 @@ const Users = ({arrayUsers}: UsersProps) => {
     const rowConf = [
         {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
         {fieldName: 'username'},
-        {fieldName: 'avatar'},
+        {fieldName: 'avatar', component: (record: BaseUser) => <Avatar src={`http://192.168.56.110:8080${record.avatar}`} />},
     ]
 
     const headConf = ["Name", "Username", "Avatar"]
@@ -104,10 +104,9 @@ const Users = ({arrayUsers}: UsersProps) => {
         []
     );
 
-
     return (
         <div className={styles.customTable}>
-            <CustomersTable
+            <CustomTable
                 count={arrayUsers.length}
                 items={users}
                 onDeselectAll={usersSelection.handleDeselectAll}
@@ -135,8 +134,20 @@ const Users = ({arrayUsers}: UsersProps) => {
                     <DeleteForeverIcon />
                 </Fab>
             </Stack>
-            <UserForm formState={formState} refresh={refreshPage}/>
+            <UserForm formState={formState} refresh={refreshPage} handleErrors={setAlert}/>
             <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
+            <Snackbar
+                open={alert.show}
+                autoHideDuration={6000}
+                onClose={() => setAlert({show: false, message: ""})}
+            >
+                <Alert onClose={() => setAlert({show: false, message: ""})} severity="error" sx={{ width: '100%' }}>
+                    <>
+                    <h3>{alert.message}</h3>
+                    <p>{alert.description}</p>
+                    </>
+                </Alert>
+            </Snackbar>
         </div>
     );
 };
@@ -172,10 +183,12 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     }
 
     const arrayUsers = await getUsers(token)
+    const user = await authService.getUser(token)
 
     return  {
         props: {
-            arrayUsers: arrayUsers
+            arrayUsers: arrayUsers,
+            profileUser: user
         }
     }
 

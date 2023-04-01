@@ -6,12 +6,13 @@ import {AuthJWTService} from "../../service/auth/authJWTService";
 type propTypes = {
     anchorEl: any,
     onClose: Function,
-    open: boolean
+    open: boolean,
+    username: string
 };
 
 
 export const AccountPopover = (props: propTypes) => {
-    const { anchorEl, onClose, open } = props;
+    const { anchorEl, onClose, open, username } = props;
     const router = useRouter();
     const auth = AuthJWTService();
 
@@ -48,7 +49,7 @@ export const AccountPopover = (props: propTypes) => {
                     color="text.secondary"
                     variant="body2"
                 >
-                    Anika Visser
+                    {username}
                 </Typography>
             </Box>
             <Divider />

@@ -7,6 +7,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { BaseUser } from './models/BaseUser';
+export type { Body_create_user_create_user_get } from './models/Body_create_user_create_user_get';
 export type { Body_login_api_auth_login_post } from './models/Body_login_api_auth_login_post';
 export type { Body_upload_image_api_events__event_id__upload_image_post } from './models/Body_upload_image_api_events__event_id__upload_image_post';
 export type { Body_upload_image_api_users__user_id__upload_image_post } from './models/Body_upload_image_api_users__user_id__upload_image_post';
@@ -24,5 +25,6 @@ export type { UserResponse } from './models/UserResponse';
 export type { ValidationError } from './models/ValidationError';
 
 export { AuthService } from './services/AuthService';
+export { DefaultService } from './services/DefaultService';
 export { EventsService } from './services/EventsService';
 export { UsersService } from './services/UsersService';

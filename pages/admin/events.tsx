@@ -1,75 +1,42 @@
-import React, {ReactElement, useCallback, useMemo, useState} from 'react';
+import React, {ReactElement, useCallback, useEffect, useMemo, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
 import {GridColDef, GridValueGetterParams} from "@mui/x-data-grid";
-import {CustomersTable, TableRow} from "../../components/customtable/customtable";
+import {CustomTable, TableRow} from "../../components/customtable/customtable";
 import {useSelection} from "../../hooks/use-selection";
 import {applyPagination} from "../../utils/apply-paginations";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import {NextApiRequest, NextApiResponse} from "next";
 // @ts-ignore
 import Cookies from 'cookies'
-
-const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70, editable: false },
-    { field: 'firstName', headerName: 'First name', width: 130, editable: false },
-    { field: 'lastName', headerName: 'Last name', width: 130, editable: false },
-    {
-        field: 'age',
-        headerName: 'Age',
-        type: 'number',
-        width: 90,
-        editable: false
-    },
-    {
-        field: 'fullName',
-        headerName: 'Full name',
-        description: 'This column has a value getter and is not sortable.',
-        sortable: false,
-        width: 160,
-        editable: false,
-        valueGetter: (params: GridValueGetterParams) =>
-            `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-    },
-];
-
-const headConf = ["ID", "First name", "Last name", "Age", "Full name"]
-
-const rowConf = [
-    {fieldName: "id"},
-    {fieldName: "firstName"},
-    {fieldName: "lastName"},
-    {fieldName: "age"},
-    {handleFunc: (row: any) => {return `${row.firstName} ${row.lastName}`}}]
-
-const rows = [
-    { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
-    { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-    { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-    { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-    { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-    { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-    { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-    { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-    { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-];
+import {getEvents} from "../../service/api/eventsApi";
+import {ResponseEvent, SystemUser} from "../../openaip";
+import Stack from "@mui/material/Stack";
+import Fab from "@mui/material/Fab";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import AlertDialog from "../../components/AlertModal/AlertModal";
+import EventForm from "../../components/eventForm/eventForm";
+import {useModalState} from "../../hooks/use-form-state";
+import {useRouter} from "next/router";
+import {deleteUsers} from "../../service/api/usersApi";
 
 
-const useCustomers = (page: number, rowsPerPage: number) => {
-    return useMemo(
+const useEvents = (page: number, rowsPerPage: number, events: Array<any>) => {
+        return useMemo(
         () => {
-            return applyPagination(rows, page, rowsPerPage);
+            return applyPagination(events, page, rowsPerPage);
         },
-        [page, rowsPerPage]
+        [page, rowsPerPage, events]
     );
 };
 
-const useCustomerIds = (customers: Array<TableRow>) => {
+const useEventsIds = (events: Array<TableRow>) => {
     return useMemo(
         () => {
-            return customers.map((customer) => customer.id);
+            return events.map((events) => events.id);
         },
-        [customers]
+        [events]
     );
 };
 
@@ -80,13 +47,35 @@ type EventType = {
     }
 }
 
-const Events = () => {
+type EventsProps = {
+    profileUser: SystemUser,
+    events: Array<ResponseEvent>
+}
+
+const Events = ({events}: EventsProps) => {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-    const customers = useCustomers(page, rowsPerPage);
-    const customersIds = useCustomerIds(customers);
-    const customersSelection = useSelection(customersIds);
+    const eventsPage = useEvents(page, rowsPerPage, events);
+    const eventsIds = useEventsIds(eventsPage);
+    const eventsSelection = useSelection(eventsIds);
+
+    const [alert, setAlert] = useState({show: false, message: "", description: ""})
+    const formState = useModalState()
+    const [deleteDisable, setDeleteDisable] = useState(true)
+    const router = useRouter();
+    const [showAlert, setShowAlert] = useState(false)
+
+
+
+    const rowConf = [
+        // {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
+        // {fieldName: 'username'},
+        // {fieldName: 'avatar', component: (record: BaseUser) => <Avatar src={`http://192.168.56.110:8080${record.avatar}`} />},
+    ]
+
+    const headConf = ["Name", "Published", "Image"]
+
 
 
     const handlePageChange = useCallback(
@@ -103,25 +92,55 @@ const Events = () => {
         []
     );
 
+    const deleteSelected = async () => {
+        await deleteUsers(eventsSelection.selected)
+        eventsSelection.handleDeselectAll()
+        refreshPage()
+    }
+
+    const refreshPage = () => {
+        router.replace(router.asPath);
+    }
+
+    useEffect(() => {
+        if (eventsSelection.selected.length) {
+            setDeleteDisable(false)
+        } else {setDeleteDisable(true)}
+    }, [eventsSelection.selected])
+
 
     return (
         <div className={styles.events}>
-            <CustomersTable
-                count={rows.length}
-                items={customers}
-                onDeselectAll={customersSelection.handleDeselectAll}
-                onDeselectOne={customersSelection.handleDeselectOne}
+            <CustomTable
+                count={events.length}
+                items={eventsPage}
+                onDeselectAll={eventsSelection.handleDeselectAll}
+                onDeselectOne={eventsSelection.handleDeselectOne}
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleRowsPerPageChange}
-                onSelectAll={customersSelection.handleSelectAll}
-                onSelectOne={customersSelection.handleSelectOne}
+                onSelectAll={eventsSelection.handleSelectAll}
+                onSelectOne={eventsSelection.handleSelectOne}
                 page={page}
                 rowsPerPage={rowsPerPage}
-                selected={customersSelection.selected}
+                selected={eventsSelection.selected}
                 rowsConf={rowConf}
                 headConf={headConf}
             />
-
+            <Stack spacing={2}
+                   direction="row"
+                   sx={{
+                       padding: 2
+                   }}
+            >
+                <Fab color="primary" aria-label="add" onClick={formState.handleNewOpen}>
+                    <AddIcon />
+                </Fab>
+                <Fab color="error" aria-label="add" onClick={() => setShowAlert(true)} disabled={deleteDisable}>
+                    <DeleteForeverIcon />
+                </Fab>
+            </Stack>
+            <EventForm formState={formState} refresh={refreshPage} handleErrors={setAlert}/>
+            <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
         </div>
     );
 };
@@ -156,8 +175,16 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         return redirectObject
     }
 
+    const user = await authService.getUser(token)
+    const events = await getEvents(token)
+
+    console.log(events)
+
     return  {
-        props: {}
+        props: {
+            profileUser: user,
+            events: []
+        }
     }
 
 }
