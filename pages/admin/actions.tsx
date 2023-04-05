@@ -1,12 +1,11 @@
-import React, {ReactElement, useMemo, useState, useCallback, SyntheticEvent, ChangeEvent, useEffect} from 'react';
+import React, {ReactElement, useMemo, useState, useCallback, useEffect} from 'react';
 import { subDays, subHours } from 'date-fns';
-import {CustomersTable, TableRow} from "../../components/customtable/customtable";
+import {CustomTable, TableRow} from "../../components/customtable/customtable";
 import DashboardLayout from "../../layouts/dashboard/layout";
 import styles from "../../styles/admin/Actions.module.scss"
 import {applyPagination} from "../../utils/apply-paginations";
 import {useSelection} from "../../hooks/use-selection";
 import {useModalState} from "../../hooks/use-form-state";
-import ActionForm from "../../components/actionForm/actionForm";
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add'
 import Fab from "@mui/material/Fab";
@@ -199,8 +198,6 @@ const Actions = () => {
     const [deleteDisable, setDeleteDisable] = useState(true)
 
     const deleteSelected = () => {
-        console.log(`Will be deleted`)
-        console.log(customersSelection.selected)
     }
 
     useEffect(() => {
@@ -236,7 +233,7 @@ const Actions = () => {
 
     return (
         <div className={styles.customTable}>
-           <CustomersTable
+           <CustomTable
                count={data.length}
                items={customers}
                onDeselectAll={customersSelection.handleDeselectAll}

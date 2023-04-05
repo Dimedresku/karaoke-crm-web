@@ -26,7 +26,7 @@ const NavBar = ({profileUser}: NavBarProps) => {
                                 height: 40,
                                 width: 40
                             }}
-                            src={`http://192.168.56.110:8080${profileUser?.avatar}`}
+                            src={`${process.env.NEXT_PUBLIC_BACK_HOST}${profileUser?.avatar}`}
                         />
                     </div>
                 </div>

@@ -1,40 +1,20 @@
-import {UsersService, OpenAPI, CreateUser, UpdateUser, UserResponse} from "../../openaip";
-import {AuthJWTService} from "../auth/authJWTService";
-import {constants} from "os";
-import errno = module
+import {UsersService, OpenAPI, CreateUser, UpdateUser} from "../../openaip";
+import {getCredentials} from "./common";
 
 const getUsers = async (token: string) => {
     OpenAPI.TOKEN = token
     OpenAPI.WITH_CREDENTIALS = true
-    OpenAPI.BASE = "http://192.168.56.110:8080"
+    OpenAPI.BASE = process.env.BACK_HOST as string
 
     try {
         const response = await UsersService.getAllUsersApiUsersGet()
         return response.users
     } catch (e) {
+        // @ts-ignore
         throw new Error(e)
     }
 }
 
-const getCredentials = () => {
-    const auth = AuthJWTService()
-    const token = auth.getToken()
-
-    OpenAPI.TOKEN = token as string
-    OpenAPI.WITH_CREDENTIALS = true
-    OpenAPI.BASE = "http://192.168.56.110:8080"
-}
-
-const createUser = async (body: CreateUser) => {
-    getCredentials()
-
-    try {
-        const newUser = await UsersService.createUserApiUsersPost(body)
-        return newUser
-    } catch (e) {
-        throw new Error(e)
-    }
-}
 
 const updateUser = async (user_id: number, body: UpdateUser) => {
     getCredentials()
@@ -42,16 +22,18 @@ const updateUser = async (user_id: number, body: UpdateUser) => {
     try {
         await UsersService.updateUserApiUsersUserIdPatch(user_id, body)
     } catch (e) {
+        // @ts-ignore
         throw new Error(e)
     }
 }
 
-const deleteUsers = async (user_ids: Array<number>) => {
+const deleteUsers = async (userIds: Array<number>) => {
     getCredentials()
 
     try {
-        user_ids.map(async (user_id: number) => await UsersService.deleteUserApiUsersUserIdDelete(user_id))
+        await Promise.all(userIds.map(async (userId: number) => UsersService.deleteUserApiUsersUserIdDelete(userId)))
     } catch (e) {
+        // @ts-ignore
         throw new Error(e)
     }
 }
@@ -62,13 +44,45 @@ const uploadAvatar = async (user_id: number, file: File) => {
     try {
         await UsersService.uploadImageApiUsersUserIdUploadImagePost(user_id, {file: file})
     } catch (e) {
+        // @ts-ignore
         throw new Error(e)
     }
 }
 
+type CreateUserData = {
+    id: number | undefined,
+    name: string | undefined,
+    username: string,
+    password: string |undefined,
+    image: Blob | undefined,
+    changeImage: boolean
+}
+
+const createUserOrUpdate = async (data: CreateUserData) => {
+    getCredentials()
+
+    try {
+        if (data.id) {
+            await UsersService.updateUserApiUsersUserIdPatch(data.id, data as CreateUser)
+            if (data.changeImage && data.image) {
+                await UsersService.uploadImageApiUsersUserIdUploadImagePost(data.id, {file: data.image})
+            }
+        } else {
+            const response = await UsersService.createUserApiUsersPost(data as CreateUser)
+            if (data.image) {
+                await UsersService.uploadImageApiUsersUserIdUploadImagePost(response.user?.id, {file: data.image})
+            }
+        }
+    } catch (e) {
+        // @ts-ignore
+        throw new Error(e)
+    }
+
+}
+
 export {
     getUsers,
-    createUser,
+    createUserOrUpdate,
     updateUser,
     deleteUsers,
     uploadAvatar,

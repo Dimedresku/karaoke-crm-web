@@ -6,5 +6,4 @@ export type EventUpdateSchema = {
     name: string;
     description: string;
     published?: boolean;
-    image?: string;
 };

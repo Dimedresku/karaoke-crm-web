@@ -4,6 +4,7 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import StoreIcon from "@mui/icons-material/Store";
 import LayersIcon from '@mui/icons-material/Layers';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import {Divider, Drawer, Stack} from "@mui/material";
 import {Scrollbar} from "../Scrollbar";
 import SideBarNavItem from "../../layouts/dashboard/SideBarNavItem";
@@ -46,6 +47,11 @@ const Sidebar = () => {
                                 text="Events"
                                 href="/admin/events"
                                 icon={<StoreIcon className={style.icon} />} />
+                            <SideBarNavItem
+                                active={pathname == "/admin/reservations"}
+                                text="Reservations"
+                                href="/admin/reservations"
+                                icon={<ReceiptLongOutlinedIcon className={style.icon} />} />
                             <SideBarNavItem
                                 active={pathname == "/admin/users"}
                                 text="Users"

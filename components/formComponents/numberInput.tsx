@@ -3,14 +3,14 @@ import { Controller } from "react-hook-form";
 import TextField from "@mui/material/TextField";
 import FormContext from "../../context/formConatext";
 
-type TextInputProps = {
+type NumberInputProps = {
     name: string,
     label: string,
     required?: boolean | string | undefined,
     rows?: number | undefined
 }
 
-const TextInput = ({name, label, required = false, rows = 1}: TextInputProps) => {
+const NumberInput = ({name, label, required = false, rows = 1}: NumberInputProps) => {
     // @ts-ignore
     const {control, errors} = useContext(FormContext)
     const error = errors[name]
@@ -34,6 +34,7 @@ const TextInput = ({name, label, required = false, rows = 1}: TextInputProps) =>
                                 onChange={onChange}
                                 rows={rows}
                                 multiline={rows > 1 }
+                                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                             />
                         )
                     }
@@ -42,4 +43,4 @@ const TextInput = ({name, label, required = false, rows = 1}: TextInputProps) =>
     );
 };
 
-export default TextInput;
+export default NumberInput;

@@ -1,7 +1,6 @@
 import React, {ReactElement, useCallback, useEffect, useMemo, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
-import {GridColDef, GridValueGetterParams} from "@mui/x-data-grid";
 import {CustomTable, TableRow} from "../../components/customtable/customtable";
 import {useSelection} from "../../hooks/use-selection";
 import {applyPagination} from "../../utils/apply-paginations";
@@ -16,10 +15,15 @@ import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AlertDialog from "../../components/AlertModal/AlertModal";
-import EventForm from "../../components/eventForm/eventForm";
 import {useModalState} from "../../hooks/use-form-state";
 import {useRouter} from "next/router";
-import {deleteUsers} from "../../service/api/usersApi";
+import Image from "next/image";
+import {Checkbox} from "@mui/material";
+import AdminForm from "../../components/adminForm/adminForm";
+import TextInput from "../../components/formComponents/textInput";
+import {SwitchInput} from "../../components/formComponents/switchInput";
+import {createEvent, deleteEvents} from "../../service/api/eventsApi";
+import {getImageOrText} from "../../utils/getImageOrText";
 
 
 const useEvents = (page: number, rowsPerPage: number, events: Array<any>) => {
@@ -66,17 +70,13 @@ const Events = ({events}: EventsProps) => {
     const router = useRouter();
     const [showAlert, setShowAlert] = useState(false)
 
-
-
     const rowConf = [
-        // {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
-        // {fieldName: 'username'},
-        // {fieldName: 'avatar', component: (record: BaseUser) => <Avatar src={`http://192.168.56.110:8080${record.avatar}`} />},
+        {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
+        {fieldName: 'published', component: (record: any) => <Checkbox disabled checked={record.published} color="success"/>},
+        {fieldName: 'image', component: (record: any) => getImageOrText(record)},
     ]
 
     const headConf = ["Name", "Published", "Image"]
-
-
 
     const handlePageChange = useCallback(
         (event: EventType, value: number) => {
@@ -93,7 +93,7 @@ const Events = ({events}: EventsProps) => {
     );
 
     const deleteSelected = async () => {
-        await deleteUsers(eventsSelection.selected)
+        await deleteEvents(eventsSelection.selected)
         eventsSelection.handleDeselectAll()
         refreshPage()
     }
@@ -108,8 +108,21 @@ const Events = ({events}: EventsProps) => {
         } else {setDeleteDisable(true)}
     }, [eventsSelection.selected])
 
+    const defaultFormState = {
+        id: "",
+        name: "",
+        description: "",
+        published: true,
+        image: "",
+    }
+
+    const handleSubmitForm = async (formData: any) => {
+        await createEvent(formData)
+        refreshPage()
+    }
 
     return (
+        <>
         <div className={styles.events}>
             <CustomTable
                 count={events.length}
@@ -139,11 +152,24 @@ const Events = ({events}: EventsProps) => {
                     <DeleteForeverIcon />
                 </Fab>
             </Stack>
-            <EventForm formState={formState} refresh={refreshPage} handleErrors={setAlert}/>
+            <AdminForm formState={formState} defaultState={defaultFormState} submit={handleSubmitForm} title="Event" >
+                <TextInput name="name"
+                           label="Name"
+                           required={"Need name"}
+                />
+                <TextInput name="description"
+                           label="Description"
+                           required={"Need description"}
+                           rows={4}
+                />
+                <SwitchInput name="published" label="Published"/>
+            </AdminForm>
             <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
         </div>
+      </>
     );
 };
+
 
 Events.getLayout = (page: ReactElement) => {
     return (
@@ -178,12 +204,10 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const user = await authService.getUser(token)
     const events = await getEvents(token)
 
-    console.log(events)
-
     return  {
         props: {
             profileUser: user,
-            events: []
+            events: events
         }
     }
 

@@ -4,7 +4,6 @@ import DashboardLayout from "../../layouts/dashboard/layout";
 import {applyPagination} from "../../utils/apply-paginations";
 import {useSelection} from "../../hooks/use-selection";
 import {useModalState} from "../../hooks/use-form-state";
-import UserForm from "../../components/userForm/userForm";
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add'
 import Fab from "@mui/material/Fab";
@@ -14,12 +13,14 @@ import {NextApiRequest, NextApiResponse} from "next";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import type { UserResponse } from '../../openaip/models/UserResponse';
 import styles from "../../styles/admin/Users.module.scss"
-import {getUsers, deleteUsers } from "../../service/api/usersApi";
+import {getUsers, deleteUsers, createUserOrUpdate } from "../../service/api/usersApi";
 // @ts-ignore
 import Cookies from 'cookies'
 import { useRouter } from 'next/router';
 import {Snackbar, Alert, Avatar} from "@mui/material";
 import {BaseUser} from "../../openaip";
+import AdminForm from "../../components/adminForm/adminForm";
+import TextInput from "../../components/formComponents/textInput";
 
 
 const useUsers = (page: number, rowsPerPage: number, data: Array<any>) => {
@@ -84,11 +85,10 @@ const Users = ({arrayUsers}: UsersProps) => {
     const rowConf = [
         {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
         {fieldName: 'username'},
-        {fieldName: 'avatar', component: (record: BaseUser) => <Avatar src={`http://192.168.56.110:8080${record.avatar}`} />},
+        {fieldName: 'avatar', component: (record: BaseUser) => <Avatar src={`${process.env.NEXT_PUBLIC_BACK_HOST}${record.avatar}`} />},
     ]
 
     const headConf = ["Name", "Username", "Avatar"]
-
 
     const handlePageChange = useCallback(
         (event: EventType, value: number) => {
@@ -103,6 +103,20 @@ const Users = ({arrayUsers}: UsersProps) => {
         },
         []
     );
+
+    const handleSubmitForm = async (formData: any) => {
+        await createUserOrUpdate(formData)
+        refreshPage()
+    }
+
+    const defaultFormValue = {
+        id: '',
+        name: '',
+        username: '',
+        avatar: '',
+        password: '',
+        confirmPassword: ''
+    }
 
     return (
         <div className={styles.customTable}>
@@ -134,14 +148,37 @@ const Users = ({arrayUsers}: UsersProps) => {
                     <DeleteForeverIcon />
                 </Fab>
             </Stack>
-            <UserForm formState={formState} refresh={refreshPage} handleErrors={setAlert}/>
+            <AdminForm formState={formState}
+                       defaultState={defaultFormValue}
+                       submit={handleSubmitForm}
+                       title="Пользователь"
+                       avatar={true}
+            >
+                <TextInput name="name"
+                           label="Name"
+                />
+                <TextInput name="username"
+                           required={'Need username'}
+                           label="Username"/>
+                {!formState.formData?.id &&
+                <>
+                    <TextInput name="password"
+                               required={"Incorrect password"}
+                               label="Password"/>
+                    <TextInput name="confirmPassword"
+                               required={"Incorrect password"}
+                               label="Confirm Password"/>
+                </>
+                }
+            </AdminForm>
             <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
             <Snackbar
                 open={alert.show}
                 autoHideDuration={6000}
-                onClose={() => setAlert({show: false, message: ""})}
+                onClose={() => setAlert({show: false, message: "", description: ""})}
             >
-                <Alert onClose={() => setAlert({show: false, message: ""})} severity="error" sx={{ width: '100%' }}>
+                <Alert onClose={() => setAlert({show: false, message: "", description: ""})}
+                       severity="error" sx={{ width: '100%' }}>
                     <>
                     <h3>{alert.message}</h3>
                     <p>{alert.description}</p>

@@ -1,0 +1,43 @@
+.item {
+  width: max-content;
+
+  &:hover {
+    .itemElement {
+    }
+
+    .itemImageWrapper {
+      z-index: 10;
+    }
+  }
+}
+
+.itemImageWrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.itemImageInner {
+  .itemImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+}
+
+.itemElement {
+  position: relative;
+  opacity: 1;
+  transition: opacity 350ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}

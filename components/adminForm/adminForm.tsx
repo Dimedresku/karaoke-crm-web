@@ -1,102 +1,75 @@
-import React, {useEffect, useState, useRef, ReactElement, createContext} from 'react';
-import {Box, CircularProgress, Stack} from "@mui/material";
+import React, {useEffect, useState, useRef, SetStateAction} from 'react';
+import {Stack} from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import {SubmitHandler, useForm} from "react-hook-form";
-import { FilePond, registerPlugin } from 'react-filepond';
-import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
-import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
-import FilePondPluginImagePreview from "filepond-plugin-image-preview";
-import FilePondPluginImageCrop from "filepond-plugin-image-crop";
-import FilePondPluginImageResize from "filepond-plugin-image-resize";
-import FilePondPluginImageTransform from "filepond-plugin-image-transform";
-import FilePondPluginImageEdit from "filepond-plugin-image-edit";
 import styles from "./adminForm.module.scss"
-import { Cropper, CropperRef, Coordinates } from 'react-advanced-cropper';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import {Coordinates, RectangleStencil} from 'react-advanced-cropper';
 import {CircleStencil} from "../stencil/CircleStencil";
+import DragAndDrop from "../dragAndDrop/dragAndDrop";
+import ImageCropper from "../imageCropper/imageCropper";
+import FormContext from "../../context/formConatext";
 
 
-registerPlugin(
-    FilePondPluginFileValidateType,
-    FilePondPluginImageExifOrientation,
-    FilePondPluginImagePreview,
-    FilePondPluginImageCrop,
-    FilePondPluginImageResize,
-    FilePondPluginImageTransform,
-    FilePondPluginImageEdit
-);
-
-type UserFormProps = {
+type AdminFormProps = {
     formState: any,
-    refresh: Function,
-    handleErrors: Function,
     defaultState: object,
     submit: SubmitHandler<any>,
-    fields: Array<ReactElement>,
+    avatar?: boolean,
     title: string
 }
-
-const FormContext = createContext({})
 
 const AdminForm = (
     {
         formState,
-        refresh,
-        handleErrors,
         defaultState,
         submit,
-        fields,
-        title
-    }: UserFormProps) => {
-    const { handleSubmit, reset, control, formState: {errors}, setError } = useForm();
+        title,
+        avatar,
+        children,
+    }: React.PropsWithChildren<AdminFormProps>) => {
+    const { handleSubmit, reset, control, formState: {errors}} = useForm();
     const [image, setImage] = useState([]);
-    const [openCrop, setCrop] = useState(false)
     const [cropImage, setCropImage] = useState('')
-    const [progress, setProgress] = useState(false)
-    const cropperRef = useRef<CropperRef>(null);
+    const [openCrop, setCrop] = useState(false)
+    const [changeImage, setChange] = useState(false)
     const filePond = useRef(null)
 
     useEffect(() => {
         let initData = formState.formData
         reset({...defaultState,...initData})
+        if (initData.avatar) {
+            const avatar = `${process.env.NEXT_PUBLIC_BACK_HOST}${initData.avatar}`
+            setImage(avatar as SetStateAction<any>)
+        } else if (initData.image) {
+            const image = `${process.env.NEXT_PUBLIC_BACK_HOST}${initData.image}`
+            setImage(image as SetStateAction<any>)
+        }
     }, [formState])
 
     const editor = {
-        open: (file, instructions) => {
+        open: (file: File, instructions: any) => {
             if (file !== undefined) {
                 setCropImage(URL.createObjectURL(file))
             }
             setCrop(true)
         },
-        onconfirm: (output) => {},
-        oncancel: () => {},
-        onclose: () => {},
     };
-
-    const cropClose = () => {
-        setCropImage('')
-        setCrop((prev) => !prev)
-    }
-    const cropSubmit = async () => {
-        setProgress(true)
-        if (cropperRef.current) {
-            const prevImage = filePond.current?.getFile()
-            const blob = await new Promise(resolve => cropperRef.current?.getCanvas()?.toBlob(resolve, prevImage.file.type)) as Blob
-            const newImage = new File([blob], prevImage.file.name, {type: prevImage.file.type})
-            await filePond.current?.addFile(newImage)
-        }
-        setCrop((prev) => !prev)
-        setProgress(false)
-    }
 
     const handleClose = () => {
         setImage([])
         formState.handleClose(reset)
+    }
+    const submitForm = (data: any) => {
+        // @ts-ignore
+        const submitImage = image[0]?.file
+        data.image = submitImage
+        data.changeImage = changeImage
+        submit(data)
+        handleClose()
     }
 
     // @ts-ignore
@@ -119,87 +92,27 @@ const AdminForm = (
             >
                 <DialogTitle>{title}</DialogTitle>
                 <DialogContent>
-                    <Stack direction="row">
+                    <Stack direction="row" sx={{justifyContent: "space-around"}}>
                         <form onSubmit={handleSubmit(submit)} className={styles.modalForm}>
                             <FormContext.Provider value={{control: control, errors: errors}} >
-                                {fields}
+                                {children}
                             </FormContext.Provider>
                         </form>
-                        <div className={styles.dragAndDropWrapper}>
-                            <FilePond
-                                ref={filePond}
-                                files={image}
-                                //@ts-ignore
-                                onupdatefiles={setImage}
-                                allowMultiple={false}
-                                maxFiles={1}
-                                name="files"
-                                labelIdle={`Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`}
-                                imagePreviewHeight={250}
-                                imageCropAspectRatio='1:1'
-                                imageResizeTargetWidth={300}
-                                imageResizeTargetHeight={300}
-                                stylePanelLayout='compact circle'
-                                styleLoadIndicatorPosition='center bottom'
-                                styleProgressIndicatorPosition='right bottom'
-                                styleButtonRemoveItemPosition='left bottom'
-                                styleButtonProcessItemPosition='right bottom'
-                                imageEditEditor={editor}
-                                allowImageEdit={true}
-                            />
-                        </div>
+                        <DragAndDrop image={image} setImage={setImage} editor={editor} filePondRef={filePond} avatar={avatar}/>
                     </Stack>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit(submit)}>Save</Button></DialogActions>
+                    <Button onClick={handleSubmit(submitForm)}>Save</Button></DialogActions>
             </Dialog>
-            <Dialog open={openCrop}
-                    sx={{
-                        backdropFilter: "blur(5px)"
-                    }}
-                    PaperProps={{
-                        sx: {
-                            height: "fit-content",
-                            overflowY: "visible"
-                        }
-                    }}>
-                {progress && <Box sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    zIndex: 10,
-                    backdropFilter: "blur(10px)",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}><CircularProgress  size={60}/></Box>}
-                <Cropper
-                    ref={cropperRef}
-                    src={cropImage}
-                    className={styles.cropper}
-                    stencilComponent={CircleStencil}
-                />
-                <div className={styles.buttons}>
-                    <button onClick={cropSubmit} className={styles.success}>
-                        <CheckCircleOutlineIcon sx={{
-                            width: 60,
-                            height: 60,
-                            color: "green"
-                        }}/></button>
-                    <button onClick={cropClose} className={styles.reject}>
-                        <CancelOutlinedIcon
-                            sx={{
-                                width: 45,
-                                height: 45,
-                                color: "firebrick"
-                            }}
-                        />
-                    </button>
-                </div>
-            </Dialog>
+            <ImageCropper openCrop={openCrop}
+                          setCrop={setCrop}
+                          filePondRef={filePond}
+                          cropImage={cropImage}
+                          setCropImage={setCropImage}
+                          setChange={setChange}
+                          stencilComponent={avatar ? CircleStencil : RectangleStencil}
+            />
         </>
     );
 }

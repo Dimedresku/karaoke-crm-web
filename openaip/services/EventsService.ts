@@ -2,7 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_upload_image_api_events__event_id__upload_image_post } from '../models/Body_upload_image_api_events__event_id__upload_image_post';
-import type { EventBaseSchema } from '../models/EventBaseSchema';
 import type { EventResponse } from '../models/EventResponse';
 import type { EventUpdateSchema } from '../models/EventUpdateSchema';
 
@@ -46,7 +45,7 @@ search: string = '',
      * @throws ApiError
      */
     public static createEventApiEventsPost(
-requestBody: EventBaseSchema,
+requestBody: EventUpdateSchema,
 ): CancelablePromise<EventResponse> {
         return __request(OpenAPI, {
             method: 'POST',
