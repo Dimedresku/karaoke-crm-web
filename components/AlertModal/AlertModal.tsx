@@ -9,10 +9,11 @@ import DialogTitle from '@mui/material/DialogTitle';
 type AlertDialogProps = {
     showDialog: boolean,
     handleSubmit: Function,
-    setShowDialog: Function
+    setShowDialog: Function,
+    message: string
 }
 
-export default function AlertDialog({showDialog, setShowDialog, handleSubmit}: AlertDialogProps) {
+export default function AlertDialog({showDialog, setShowDialog, handleSubmit, message}: AlertDialogProps) {
 
     const handleAgree = () => {
         handleSubmit();
@@ -32,7 +33,7 @@ export default function AlertDialog({showDialog, setShowDialog, handleSubmit}: A
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title">
-                    {"Delete selected users?"}
+                    {message}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">

@@ -15,12 +15,14 @@ export class ReservationsService {
      * Get Reservations
      * @param limit 
      * @param page 
+     * @param order 
      * @returns any Successful Response
      * @throws ApiError
      */
     public static getReservationsApiReservationsGet(
 limit: number = 10,
 page: number = 1,
+order?: string,
 ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -28,6 +30,7 @@ page: number = 1,
             query: {
                 'limit': limit,
                 'page': page,
+                'order': order,
             },
             errors: {
                 422: `Validation Error`,

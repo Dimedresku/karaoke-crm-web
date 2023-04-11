@@ -4,7 +4,7 @@
 
 export type ReservationUpdateSchema = {
     date_reservation?: string;
-    people_count?: string;
+    people_count?: number;
     phone_number?: string;
     email?: string;
     comment?: string;

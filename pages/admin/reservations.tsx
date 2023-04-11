@@ -1,17 +1,23 @@
-import React, {ReactElement, useCallback, useEffect, useMemo, useState} from 'react';
+import React, {ReactElement, useEffect, useRef, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
-import {CustomTable, TableRow} from "../../components/customtable/customtable";
-import {useSelection} from "../../hooks/use-selection";
-import {applyPagination} from "../../utils/apply-paginations";
+import {CustomTable} from "../../components/customtable/customtable";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import {NextApiRequest, NextApiResponse} from "next";
 // @ts-ignore
 import Cookies from 'cookies'
-import {ResponseReservation, SystemUser} from "../../openaip";
-import Checkbox from "@mui/material/Checkbox";
-import Stack from "@mui/material/Stack";
-import Fab from "@mui/material/Fab";
+import {
+    Box,
+    Checkbox,
+    Stack,
+    Fab,
+    TableRow,
+    TableCell,
+    TableHead,
+    IconButton,
+    Tooltip,
+    TableSortLabel
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AlertDialog from "../../components/AlertModal/AlertModal";
@@ -34,57 +40,135 @@ import dayjs from "dayjs";
 import GetCommentChip from "../../utils/getCommentChip";
 import getHumanDate from "../../utils/getHumanDate";
 import {SwitchInput} from "../../components/formComponents/switchInput";
-
-const useEvents = (page: number, rowsPerPage: number, reservations: Array<any>) => {
-    return useMemo(
-        () => {
-            return applyPagination(reservations, page, rowsPerPage);
-        },
-        [page, rowsPerPage, reservations]
-    );
-};
-
-const useEventsIds = (reservations: Array<TableRow>) => {
-    return useMemo(
-        () => {
-            return reservations.map((reservation) => reservation.id);
-        },
-        [reservations]
-    );
-};
+import DeleteIcon from "@mui/icons-material/Delete";
+import { publishRefreshTable } from "../../utils/tableEvent";
 
 
-type EventType = {
-    target: {
-        value: number
+type ReservationTableToolBarProps = {
+    selected: Array<number>,
+}
+
+const ReservationTableToolBar = ({selected}: ReservationTableToolBarProps) => {
+
+    const [showAlert, setShowAlert] = useState(false)
+
+    const handleDelete = async () => {
+        await deleteReservation(selected)
+        publishRefreshTable()
     }
+
+    const handleEnable = async () => {
+        await servedReservation(selected)
+        publishRefreshTable()
+    }
+
+    const handleDisable = async () => {
+        await disableServedReservation(selected)
+        publishRefreshTable()
+    }
+
+    return (
+        <>
+        <Stack direction="row" spacing={1}>
+            <Tooltip title="Select">
+                <IconButton sx={{'&:hover': {color: "green"}}} onClick={handleEnable}>
+                    <CheckBoxOutlinedIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Disable">
+                <IconButton sx={{'&:hover': {color: "dodgerBlue"}}} onClick={handleDisable}>
+                    <CancelOutlinedIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+                <IconButton sx={{'&:hover': {color: "#DC143C"}}} onClick={() => setShowAlert(true)} >
+                    <DeleteIcon />
+                </IconButton>
+            </Tooltip>
+        </Stack>
+        <AlertDialog showDialog={showAlert}
+                     handleSubmit={handleDelete}
+                     setShowDialog={setShowAlert}
+                     message={"Delete selected reservations?"}
+        />
+        </>
+)
 }
 
-type ReservationsProps = {
-    profileUser: SystemUser,
-    reservations: Array<ResponseReservation>
+type ReservationsTableHeadProps = {
+    checked: boolean,
+    indeterminate: boolean,
+    recordsSelection: any,
+    order: string,
+    setOrder: Function
 }
 
-const Reservations = ({reservations}: ReservationsProps) => {
+const ReservationsTableHead = ({checked, indeterminate, recordsSelection, order, setOrder}: ReservationsTableHeadProps) => {
+    return (
+        <TableHead>
+            <TableRow>
+                <TableCell padding="checkbox">
+                    <Checkbox
+                        checked={checked}
+                        indeterminate={indeterminate}
+                        onChange={(event) => {
+                            if (event.target.checked) {
+                                recordsSelection.handleSelectAll();
+                            } else {
+                                recordsSelection.handleDeselectAll();
+                            }
+                        }}
+                    />
+                </TableCell>
+                <TableCell>
+                    <TableSortLabel
+                        active={["date_asc", "date_desc"].includes(order)}
+                        direction={order == "date_asc" ? "asc" : "desc"}
+                        onClick={() => setOrder((prev) => {
+                            if (prev === "date_asc") {
+                                return "date_desc"
+                            } else {
+                                return 'date_asc'
+                            }
+                        })}
+                    >
+                        Date
+                    </TableSortLabel>
+                </TableCell>
+                <TableCell>Served</TableCell>
+                <TableCell>Comments</TableCell>
+                <TableCell>
+                    <TableSortLabel
+                        active={["people_desc", "people_asc"].includes(order)}
+                        direction={order == "people_asc" ? "asc" : "desc"}
+                        onClick={() => setOrder((prev) => {
+                            if (prev === "people_asc") {
+                                return "people_desc"
+                            } else {
+                                return "people_asc"
+                            }
+                        })}
+                    >
+                        People Count
+                    </TableSortLabel>
+                </TableCell>
+                <TableCell>Phone</TableCell>
+            </TableRow>
+        </TableHead>
+    )
+}
 
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
-    const reservationsPage = useEvents(page, rowsPerPage, reservations);
-    const reservationsIds = useEventsIds(reservationsPage);
-    const reservationsSelection = useSelection(reservationsIds);
+const Reservations = () => {
 
     const [alert, setAlert] = useState({show: false, message: "", description: ""})
     const formState = useModalState()
-    const [deleteDisable, setDeleteDisable] = useState(true)
-    const router = useRouter();
-    const [showAlert, setShowAlert] = useState(false)
 
     const rowConf = [
         {
             fieldName: 'date_reservation',
             click: true,
             clickHandle: formState.handleClickOpen,
-            component: (record: any) => getHumanDate(record.reservation_date)
+            component: (record: any) => getHumanDate(record.date_reservation)
         },
         {fieldName: "served", component: (record: any) => <Checkbox disabled checked={record.served} color="success"/>},
         {
@@ -94,50 +178,6 @@ const Reservations = ({reservations}: ReservationsProps) => {
         {fieldName: 'people_count'},
         {fieldName: 'phone_number'},
     ]
-
-    const headConf = ["Date", "Served", "Comments", "People Count", "Phone"]
-
-    const handlePageChange = useCallback(
-        (event: EventType, value: number) => {
-            setPage(value);
-        },
-        []
-    );
-
-    const handleRowsPerPageChange = useCallback(
-        (event: EventType) => {
-            setRowsPerPage(event.target.value);
-        },
-        []
-    );
-
-    const handleDisableServedReservation = async () => {
-        await disableServedReservation(reservationsSelection.selected)
-        reservationsSelection.handleDeselectAll()
-        refreshPage()
-    }
-
-    const handleServedReservation = async () => {
-        await servedReservation(reservationsSelection.selected)
-        reservationsSelection.handleDeselectAll()
-        refreshPage()
-    }
-
-    const deleteSelected = async () => {
-        await deleteReservation(reservationsSelection.selected)
-        reservationsSelection.handleDeselectAll()
-        refreshPage()
-    }
-
-    const refreshPage = () => {
-        router.replace(router.asPath);
-    }
-
-    useEffect(() => {
-        if (reservationsSelection.selected.length) {
-            setDeleteDisable(false)
-        } else {setDeleteDisable(true)}
-    }, [reservationsSelection.selected])
 
     const defaultFormState = {
         id: "",
@@ -152,26 +192,21 @@ const Reservations = ({reservations}: ReservationsProps) => {
 
     const handleSubmitForm = async (formData: any) => {
         await createReservation(formData)
-        refreshPage()
+        publishRefreshTable()
     }
 
     return (
         <>
             <div className={styles.events}>
                 <CustomTable
-                    count={reservations.length}
-                    items={reservationsPage}
-                    onDeselectAll={reservationsSelection.handleDeselectAll}
-                    onDeselectOne={reservationsSelection.handleDeselectOne}
-                    onPageChange={handlePageChange}
-                    onRowsPerPageChange={handleRowsPerPageChange}
-                    onSelectAll={reservationsSelection.handleSelectAll}
-                    onSelectOne={reservationsSelection.handleSelectOne}
-                    page={page}
-                    rowsPerPage={rowsPerPage}
-                    selected={reservationsSelection.selected}
                     rowsConf={rowConf}
-                    headConf={headConf}
+                    // @ts-ignore
+                    TableCustomHead={ReservationsTableHead}
+                    // @ts-ignore
+                    TableAction={ReservationTableToolBar}
+                    fetchData={getReservations}
+                    setError={setAlert}
+                    tableName="Reservations"
                 />
                 <Stack spacing={2}
                        direction="row"
@@ -181,15 +216,6 @@ const Reservations = ({reservations}: ReservationsProps) => {
                 >
                     <Fab color="primary" aria-label="add" onClick={formState.handleNewOpen}>
                         <AddIcon />
-                    </Fab>
-                    <Fab color="error" aria-label="add" onClick={() => setShowAlert(true)} disabled={deleteDisable}>
-                        <DeleteForeverIcon />
-                    </Fab>
-                    <Fab color="success" aria-label="add" onClick={handleServedReservation} disabled={deleteDisable}>
-                        <CheckBoxOutlinedIcon />
-                    </Fab>
-                    <Fab color="info" aria-label="add" onClick={handleDisableServedReservation} disabled={deleteDisable}>
-                        <CancelOutlinedIcon />
                     </Fab>
                 </Stack>
                 <SimpleForm formState={formState} defaultState={defaultFormState} submit={handleSubmitForm} title="Reservation" >
@@ -214,7 +240,6 @@ const Reservations = ({reservations}: ReservationsProps) => {
                     />
                     <SwitchInput name="served" label="Served" />
                 </SimpleForm>
-                <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
             </div>
         </>
     );
@@ -251,12 +276,10 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     }
 
     const user = await authService.getUser(token)
-    const reservations = await getReservations(token)
 
     return  {
         props: {
             profileUser: user,
-            reservations: reservations
         }
     }
 

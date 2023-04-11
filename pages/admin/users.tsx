@@ -1,8 +1,6 @@
-import React, {ReactElement, useMemo, useState, useCallback, useEffect} from 'react';
-import {CustomTable, TableRow} from "../../components/customtable/customtable";
+import React, {ReactElement, useState} from 'react';
+import {CustomTable} from "../../components/customtable/customtable";
 import DashboardLayout from "../../layouts/dashboard/layout";
-import {applyPagination} from "../../utils/apply-paginations";
-import {useSelection} from "../../hooks/use-selection";
 import {useModalState} from "../../hooks/use-form-state";
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add'
@@ -23,31 +21,6 @@ import AdminForm from "../../components/adminForm/adminForm";
 import TextInput from "../../components/formComponents/textInput";
 
 
-const useUsers = (page: number, rowsPerPage: number, data: Array<any>) => {
-    return useMemo(
-        () => {
-            data = data.sort((first, second) => first.id - second.id)
-            return applyPagination(data, page, rowsPerPage);
-        },
-        [page, rowsPerPage, data]
-    );
-};
-
-const useUserIds = (customers: Array<TableRow>) => {
-    return useMemo(
-        () => {
-            return customers.map((customer) => customer.id);
-        },
-        [customers]
-    );
-};
-
-type EventType = {
-    target: {
-        value: number
-    }
-}
-
 type UsersProps = {
     arrayUsers: Array<UserResponse>
 }
@@ -55,32 +28,21 @@ type UsersProps = {
 
 const Users = ({arrayUsers}: UsersProps) => {
 
-    const [page, setPage] = useState(0);
     const [showAlert, setShowAlert] = useState(false)
-    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [alert, setAlert] = useState({show: false, message: "", description: ""})
-    const users = useUsers(page, rowsPerPage, arrayUsers);
-    const usersIds = useUserIds(users);
-    const usersSelection = useSelection(usersIds);
     const formState = useModalState()
     const [deleteDisable, setDeleteDisable] = useState(true)
     const router = useRouter();
 
     const deleteSelected = async () => {
-        await deleteUsers(usersSelection.selected)
-        usersSelection.handleDeselectAll()
+        // await deleteUsers(usersSelection.selected)
+        // usersSelection.handleDeselectAll()
         refreshPage()
     }
 
     const refreshPage = () => {
         router.replace(router.asPath);
     }
-
-    useEffect(() => {
-        if (usersSelection.selected.length) {
-            setDeleteDisable(false)
-        } else {setDeleteDisable(true)}
-    }, [usersSelection.selected])
 
     const rowConf = [
         {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
@@ -89,20 +51,6 @@ const Users = ({arrayUsers}: UsersProps) => {
     ]
 
     const headConf = ["Name", "Username", "Avatar"]
-
-    const handlePageChange = useCallback(
-        (event: EventType, value: number) => {
-            setPage(value);
-        },
-        []
-    );
-
-    const handleRowsPerPageChange = useCallback(
-        (event: EventType) => {
-            setRowsPerPage(event.target.value);
-        },
-        []
-    );
 
     const handleSubmitForm = async (formData: any) => {
         await createUserOrUpdate(formData)
@@ -121,19 +69,10 @@ const Users = ({arrayUsers}: UsersProps) => {
     return (
         <div className={styles.customTable}>
             <CustomTable
-                count={arrayUsers.length}
-                items={users}
-                onDeselectAll={usersSelection.handleDeselectAll}
-                onDeselectOne={usersSelection.handleDeselectOne}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleRowsPerPageChange}
-                onSelectAll={usersSelection.handleSelectAll}
-                onSelectOne={usersSelection.handleSelectOne}
-                page={page}
-                rowsPerPage={rowsPerPage}
-                selected={usersSelection.selected}
+                data={arrayUsers}
                 rowsConf={rowConf}
                 headConf={headConf}
+                tableAction={undefined}
             />
             <Stack spacing={2}
                    direction="row"

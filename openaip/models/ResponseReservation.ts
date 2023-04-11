@@ -7,9 +7,9 @@ export type ResponseReservation = {
     people_count: number;
     phone_number: string;
     email?: string;
-    comment: string;
-    admin_comment: string;
-    serverd: boolean;
+    comment?: string;
+    admin_comment?: string;
+    served: boolean;
     createdAt?: string;
     updatedAt?: string;
     id: number;

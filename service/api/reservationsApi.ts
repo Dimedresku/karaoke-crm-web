@@ -3,15 +3,12 @@ import {ReservationsService} from "../../openaip";
 import {getCredentials} from "./common";
 import dayjs from "dayjs";
 
-const getReservations = async (token: string) => {
-
-    OpenAPI.TOKEN = token
-    OpenAPI.WITH_CREDENTIALS = true
-    OpenAPI.BASE = process.env.BACK_HOST as string
+const getReservations = async (limit: number, page: number, order: string) => {
+    getCredentials()
 
     try {
-        const response = await ReservationsService.getReservationsApiReservationsGet()
-        return response.reservations
+        const response = await ReservationsService.getReservationsApiReservationsGet(limit, page, order)
+        return {result: response.reservations, count: response.results}
     } catch (e) {
         // @ts-ignore
         throw new Error(e)
