@@ -1,74 +1,87 @@
-import React, {ReactElement, useCallback, useEffect, useMemo, useState} from 'react';
+import React, {ReactElement, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
-import {CustomTable, TableRow} from "../../components/customtable/customtable";
-import {useSelection} from "../../hooks/use-selection";
-import {applyPagination} from "../../utils/apply-paginations";
+import {CustomTable} from "../../components/customtable/customtable";
 import {AuthJWTService} from "../../service/auth/authJWTService";
 import {NextApiRequest, NextApiResponse} from "next";
 // @ts-ignore
 import Cookies from 'cookies'
-import {getEvents} from "../../service/api/eventsApi";
-import {ResponseEvent, SystemUser} from "../../openaip";
+import {getEvents, publishEvents, unPublishEvents} from "../../service/api/eventsApi";
 import Stack from "@mui/material/Stack";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AlertDialog from "../../components/AlertModal/AlertModal";
 import {useModalState} from "../../hooks/use-form-state";
-import {useRouter} from "next/router";
 import Image from "next/image";
-import {Checkbox} from "@mui/material";
+import {Checkbox, IconButton, Tooltip} from "@mui/material";
 import AdminForm from "../../components/adminForm/adminForm";
 import TextInput from "../../components/formComponents/textInput";
 import {SwitchInput} from "../../components/formComponents/switchInput";
 import {createEvent, deleteEvents} from "../../service/api/eventsApi";
 import {getImageOrText} from "../../utils/getImageOrText";
+import {publishRefreshTable} from "../../utils/tableEvent";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 
 
-const useEvents = (page: number, rowsPerPage: number, events: Array<any>) => {
-        return useMemo(
-        () => {
-            return applyPagination(events, page, rowsPerPage);
-        },
-        [page, rowsPerPage, events]
-    );
-};
-
-const useEventsIds = (events: Array<TableRow>) => {
-    return useMemo(
-        () => {
-            return events.map((events) => events.id);
-        },
-        [events]
-    );
-};
-
-
-type EventType = {
-    target: {
-        value: number
-    }
+type EventsTableToolBarProps = {
+    selected: Array<number>,
 }
 
-type EventsProps = {
-    profileUser: SystemUser,
-    events: Array<ResponseEvent>
-}
+const EventsTableToolBar = ({selected}: EventsTableToolBarProps) => {
 
-const Events = ({events}: EventsProps) => {
-
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
-    const eventsPage = useEvents(page, rowsPerPage, events);
-    const eventsIds = useEventsIds(eventsPage);
-    const eventsSelection = useSelection(eventsIds);
-
-    const [alert, setAlert] = useState({show: false, message: "", description: ""})
-    const formState = useModalState()
-    const [deleteDisable, setDeleteDisable] = useState(true)
-    const router = useRouter();
     const [showAlert, setShowAlert] = useState(false)
+
+    const handleDelete = async () => {
+        await deleteEvents(selected)
+        publishRefreshTable()
+    }
+
+    const handleEnable = async () => {
+        await publishEvents(selected)
+        publishRefreshTable()
+    }
+
+    const handleDisable = async () => {
+        await unPublishEvents(selected)
+        publishRefreshTable()
+    }
+
+
+    return (
+        <>
+            <Stack direction="row" spacing={1}>
+                <Tooltip title="Select">
+                    <IconButton sx={{'&:hover': {color: "green"}}} onClick={handleEnable}>
+                        <CheckBoxOutlinedIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Disable">
+                    <IconButton sx={{'&:hover': {color: "dodgerBlue"}}} onClick={handleDisable}>
+                        <CancelOutlinedIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                    <IconButton sx={{'&:hover': {color: "#DC143C"}}} onClick={() => setShowAlert(true)} >
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
+            <AlertDialog showDialog={showAlert}
+                         handleSubmit={handleDelete}
+                         setShowDialog={setShowAlert}
+                         message={"Delete selected users?"}
+            />
+        </>
+    )
+}
+
+
+const Events = () => {
+
+    const formState = useModalState()
+    const [alert, setAlert] = useState(null)
 
     const rowConf = [
         {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
@@ -77,36 +90,6 @@ const Events = ({events}: EventsProps) => {
     ]
 
     const headConf = ["Name", "Published", "Image"]
-
-    const handlePageChange = useCallback(
-        (event: EventType, value: number) => {
-            setPage(value);
-        },
-        []
-    );
-
-    const handleRowsPerPageChange = useCallback(
-        (event: EventType) => {
-            setRowsPerPage(event.target.value);
-        },
-        []
-    );
-
-    const deleteSelected = async () => {
-        await deleteEvents(eventsSelection.selected)
-        eventsSelection.handleDeselectAll()
-        refreshPage()
-    }
-
-    const refreshPage = () => {
-        router.replace(router.asPath);
-    }
-
-    useEffect(() => {
-        if (eventsSelection.selected.length) {
-            setDeleteDisable(false)
-        } else {setDeleteDisable(true)}
-    }, [eventsSelection.selected])
 
     const defaultFormState = {
         id: "",
@@ -118,26 +101,20 @@ const Events = ({events}: EventsProps) => {
 
     const handleSubmitForm = async (formData: any) => {
         await createEvent(formData)
-        refreshPage()
+        publishRefreshTable()
     }
 
     return (
         <>
         <div className={styles.events}>
             <CustomTable
-                count={events.length}
-                items={eventsPage}
-                onDeselectAll={eventsSelection.handleDeselectAll}
-                onDeselectOne={eventsSelection.handleDeselectOne}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleRowsPerPageChange}
-                onSelectAll={eventsSelection.handleSelectAll}
-                onSelectOne={eventsSelection.handleSelectOne}
-                page={page}
-                rowsPerPage={rowsPerPage}
-                selected={eventsSelection.selected}
                 rowsConf={rowConf}
                 headConf={headConf}
+                // @ts-ignore
+                TableAction={EventsTableToolBar}
+                fetchData={getEvents}
+                tableName="Events"
+                setError={setAlert}
             />
             <Stack spacing={2}
                    direction="row"
@@ -147,9 +124,6 @@ const Events = ({events}: EventsProps) => {
             >
                 <Fab color="primary" aria-label="add" onClick={formState.handleNewOpen}>
                     <AddIcon />
-                </Fab>
-                <Fab color="error" aria-label="add" onClick={() => setShowAlert(true)} disabled={deleteDisable}>
-                    <DeleteForeverIcon />
                 </Fab>
             </Stack>
             <AdminForm formState={formState} defaultState={defaultFormState} submit={handleSubmitForm} title="Event" >
@@ -164,7 +138,6 @@ const Events = ({events}: EventsProps) => {
                 />
                 <SwitchInput name="published" label="Published"/>
             </AdminForm>
-            <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
         </div>
       </>
     );
@@ -202,12 +175,10 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     }
 
     const user = await authService.getUser(token)
-    const events = await getEvents(token)
 
     return  {
         props: {
             profileUser: user,
-            events: events
         }
     }
 

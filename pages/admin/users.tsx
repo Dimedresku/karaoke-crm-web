@@ -5,44 +5,56 @@ import {useModalState} from "../../hooks/use-form-state";
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add'
 import Fab from "@mui/material/Fab";
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import AlertDialog from "../../components/AlertModal/AlertModal";
 import {NextApiRequest, NextApiResponse} from "next";
 import {AuthJWTService} from "../../service/auth/authJWTService";
-import type { UserResponse } from '../../openaip/models/UserResponse';
 import styles from "../../styles/admin/Users.module.scss"
 import {getUsers, deleteUsers, createUserOrUpdate } from "../../service/api/usersApi";
 // @ts-ignore
 import Cookies from 'cookies'
-import { useRouter } from 'next/router';
-import {Snackbar, Alert, Avatar} from "@mui/material";
+import {Snackbar, Alert, Avatar, Tooltip, IconButton} from "@mui/material";
 import {BaseUser} from "../../openaip";
 import AdminForm from "../../components/adminForm/adminForm";
 import TextInput from "../../components/formComponents/textInput";
+import {publishRefreshTable} from "../../utils/tableEvent";
+import DeleteIcon from "@mui/icons-material/Delete";
 
+type UsersTableToolBarProps = {
+    selected: Array<number>,
+}
 
-type UsersProps = {
-    arrayUsers: Array<UserResponse>
+const UsersTableToolBar = ({selected}: UsersTableToolBarProps) => {
+
+    const [showAlert, setShowAlert] = useState(false)
+
+    const handleDelete = async () => {
+        await deleteUsers(selected)
+        publishRefreshTable()
+    }
+
+    return (
+        <>
+            <Stack direction="row" spacing={1}>
+                <Tooltip title="Delete">
+                    <IconButton sx={{'&:hover': {color: "#DC143C"}}} onClick={() => setShowAlert(true)} >
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
+            <AlertDialog showDialog={showAlert}
+                         handleSubmit={handleDelete}
+                         setShowDialog={setShowAlert}
+                         message={"Delete selected users?"}
+            />
+        </>
+    )
 }
 
 
-const Users = ({arrayUsers}: UsersProps) => {
+const Users = () => {
 
-    const [showAlert, setShowAlert] = useState(false)
     const [alert, setAlert] = useState({show: false, message: "", description: ""})
     const formState = useModalState()
-    const [deleteDisable, setDeleteDisable] = useState(true)
-    const router = useRouter();
-
-    const deleteSelected = async () => {
-        // await deleteUsers(usersSelection.selected)
-        // usersSelection.handleDeselectAll()
-        refreshPage()
-    }
-
-    const refreshPage = () => {
-        router.replace(router.asPath);
-    }
 
     const rowConf = [
         {fieldName: 'name', click: true, clickHandle: formState.handleClickOpen},
@@ -54,7 +66,7 @@ const Users = ({arrayUsers}: UsersProps) => {
 
     const handleSubmitForm = async (formData: any) => {
         await createUserOrUpdate(formData)
-        refreshPage()
+        publishRefreshTable()
     }
 
     const defaultFormValue = {
@@ -69,10 +81,13 @@ const Users = ({arrayUsers}: UsersProps) => {
     return (
         <div className={styles.customTable}>
             <CustomTable
-                data={arrayUsers}
                 rowsConf={rowConf}
                 headConf={headConf}
-                tableAction={undefined}
+                // @ts-ignore
+                TableAction={UsersTableToolBar}
+                fetchData={getUsers}
+                setError={setAlert}
+                tableName="Users"
             />
             <Stack spacing={2}
                    direction="row"
@@ -82,9 +97,6 @@ const Users = ({arrayUsers}: UsersProps) => {
             >
                 <Fab color="primary" aria-label="add" onClick={formState.handleNewOpen}>
                     <AddIcon />
-                </Fab>
-                <Fab color="error" aria-label="add" onClick={() => setShowAlert(true)} disabled={deleteDisable}>
-                    <DeleteForeverIcon />
                 </Fab>
             </Stack>
             <AdminForm formState={formState}
@@ -110,7 +122,6 @@ const Users = ({arrayUsers}: UsersProps) => {
                 </>
                 }
             </AdminForm>
-            <AlertDialog showDialog={showAlert} handleSubmit={deleteSelected} setShowDialog={setShowAlert} />
             <Snackbar
                 open={alert.show}
                 autoHideDuration={6000}
@@ -158,12 +169,10 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         return redirectObject
     }
 
-    const arrayUsers = await getUsers(token)
     const user = await authService.getUser(token)
 
     return  {
         props: {
-            arrayUsers: arrayUsers,
             profileUser: user
         }
     }

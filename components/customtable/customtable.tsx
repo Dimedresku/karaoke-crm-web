@@ -41,13 +41,15 @@ export type TableRow = {
 
 interface EnhancedTableToolbarProps {
     numSelected: number,
-    TableAction: JSXElement | undefined,
+    TableAction?: JSXElement | undefined,
+    TableUtils?: JSXElement | undefined,
     selected: Array<any>,
     tableName: string,
+    setFilterQuery: Function
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-    const { numSelected, TableAction, selected, tableName } = props
+    const { numSelected, TableAction, TableUtils, selected, tableName, setFilterQuery } = props
 
     return (
         <Toolbar
@@ -79,7 +81,8 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
                     {tableName}
                 </Typography>
             )}
-            {numSelected > 0 && (<TableAction selected={selected} />)}
+            {numSelected > 0 ? (TableAction && <TableAction selected={selected} />) :
+                (TableUtils && <TableUtils setFilterQuery={setFilterQuery}/>) }
         </Toolbar>
     );
 }
@@ -102,6 +105,7 @@ type CustomTableProps = {
     headConf?: Array<any>,
     TableCustomHead?: JSXElement | undefined
     TableAction?: JSXElement | undefined,
+    TableUtils?: JSXElement | undefined,
     fetchData: Function,
     setError: Function,
     tableName: string
@@ -113,6 +117,7 @@ export const CustomTable = (props: CustomTableProps) => {
         headConf = [],
         TableCustomHead,
         TableAction,
+        TableUtils,
         fetchData,
         setError,
         tableName
@@ -122,6 +127,7 @@ export const CustomTable = (props: CustomTableProps) => {
     const [load, setLoad] = useState(true)
     const [count, setCount] = useState(0)
     const [order, setOrder] = useState('')
+    const [filterQuery, setFilterQuery] = useState("")
     const [data, setData] = useState<any>([])
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const recordsIds = useRecordIds(data);
@@ -144,26 +150,31 @@ export const CustomTable = (props: CustomTableProps) => {
         []
     );
 
-    const refreshTable = async () => {
-        console.log('refresh')
+    const refreshTable = useCallback(async () => {
         recordsSelection.handleDeselectAll()
-        const dataRows = await fetchData(rowsPerPage, page + 1, order)
+        const fetchDataProps = {
+            limit: rowsPerPage,
+            page: page + 1,
+            order,
+            filterQuery
+        }
+        const dataRows = await fetchData(fetchDataProps)
         setData(dataRows.result as SetStateAction<any>)
         setCount(dataRows.count)
         setLoad(false)
-    }
+    }, [page, rowsPerPage, order, filterQuery])
 
     useEffect(() => {
         refreshTable().catch((e) => {
                 setError({show: true, message: e.message})
             })
 
-    }, [page, rowsPerPage, order])
+    }, [page, rowsPerPage, order, filterQuery])
 
     useEffect(() => {
         subscribe(refreshTable)
         return () => unsubscribe(refreshTable)
-    }, [page, rowsPerPage, order])
+    }, [])
 
     const getTableHead = () => {
         if (TableCustomHead !== undefined) {
@@ -219,9 +230,10 @@ export const CustomTable = (props: CustomTableProps) => {
                 <Box sx={{ minWidth: 800 }}>
                     <EnhancedTableToolbar numSelected={recordsSelection.selected.length}
                                           TableAction={TableAction}
+                                          TableUtils={TableUtils}
                                           selected={recordsSelection.selected}
                                           tableName={tableName}
-                                          refreshTable={refreshTable}
+                                          setFilterQuery={setFilterQuery}
                     />
                     <Table>
                         {getTableHead()}

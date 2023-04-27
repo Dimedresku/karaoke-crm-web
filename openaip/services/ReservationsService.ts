@@ -1,15 +1,60 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PeopleCountStatistic } from '../models/PeopleCountStatistic';
 import type { ReservationCreateSchema } from '../models/ReservationCreateSchema';
 import type { ReservationResponse } from '../models/ReservationResponse';
+import type { ReservationStatisticSchema } from '../models/ReservationStatisticSchema';
 import type { ReservationUpdateSchema } from '../models/ReservationUpdateSchema';
+import type { StatisticType } from '../models/StatisticType';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
 export class ReservationsService {
+
+    /**
+     * Get Reservations Statistics
+     * @param type 
+     * @returns ReservationStatisticSchema Successful Response
+     * @throws ApiError
+     */
+    public static getReservationsStatisticsApiReservationsStatisticsGet(
+type?: StatisticType,
+): CancelablePromise<Array<ReservationStatisticSchema>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/reservations/statistics',
+            query: {
+                'type': type,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Get Reservations Statistics
+     * @param type 
+     * @returns PeopleCountStatistic Successful Response
+     * @throws ApiError
+     */
+    public static getReservationsStatisticsApiReservationsPeopleCountStatisticsGet(
+type?: StatisticType,
+): CancelablePromise<Array<PeopleCountStatistic>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/reservations/people_count_statistics',
+            query: {
+                'type': type,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
 
     /**
      * Get Reservations

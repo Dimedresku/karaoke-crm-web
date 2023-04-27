@@ -2,9 +2,9 @@ import React from 'react';
 import style from "./Sidebar.module.scss"
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import StoreIcon from "@mui/icons-material/Store";
-import LayersIcon from '@mui/icons-material/Layers';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
+import RestaurantMenuOutlinedIcon from '@mui/icons-material/RestaurantMenuOutlined';
 import {Divider, Drawer, Stack} from "@mui/material";
 import {Scrollbar} from "../Scrollbar";
 import SideBarNavItem from "../../layouts/dashboard/SideBarNavItem";
@@ -38,11 +38,6 @@ const Sidebar = () => {
                                 href="/admin"
                                 icon={<BarChartIcon className={style.icon} />} />
                             <SideBarNavItem
-                                active={pathname == "/admin/actions"}
-                                text="Actions"
-                                href="/admin/actions"
-                                icon={<LayersIcon className={style.icon} />} />
-                            <SideBarNavItem
                                 active={pathname == "/admin/events"}
                                 text="Events"
                                 href="/admin/events"
@@ -52,6 +47,11 @@ const Sidebar = () => {
                                 text="Reservations"
                                 href="/admin/reservations"
                                 icon={<ReceiptLongOutlinedIcon className={style.icon} />} />
+                            <SideBarNavItem
+                                active={pathname == "/admin/menu-item"}
+                                text="Menu Items"
+                                href="/admin/menu-item"
+                                icon={<RestaurantMenuOutlinedIcon className={style.icon} />} />
                             <SideBarNavItem
                                 active={pathname == "/admin/users"}
                                 text="Users"

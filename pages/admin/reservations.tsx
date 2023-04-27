@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useRef, useState} from 'react';
+import React, {ReactElement, useState} from 'react';
 import styles from "../../styles/admin/Events.module.scss"
 import DashboardLayout from "../../layouts/dashboard/layout";
 import {CustomTable} from "../../components/customtable/customtable";
@@ -7,7 +7,6 @@ import {NextApiRequest, NextApiResponse} from "next";
 // @ts-ignore
 import Cookies from 'cookies'
 import {
-    Box,
     Checkbox,
     Stack,
     Fab,
@@ -19,10 +18,8 @@ import {
     TableSortLabel
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AlertDialog from "../../components/AlertModal/AlertModal";
 import {useModalState} from "../../hooks/use-form-state";
-import {useRouter} from "next/router";
 import TextInput from "../../components/formComponents/textInput";
 import DateTimePicker from "../../components/formComponents/dateTimePicker";
 import NumberInput from "../../components/formComponents/numberInput";

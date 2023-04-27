@@ -1,19 +1,20 @@
 import {getCredentials} from "./common";
-import {EventsService, OpenAPI, EventUpdateSchema} from "../../openaip";
+import {EventsService, EventUpdateSchema} from "../../openaip";
 
 
-const getEvents = async (token: string) => {
+type getEventsProps = {
+    limit: number,
+    page: number
+}
 
-    OpenAPI.TOKEN = token
-    OpenAPI.WITH_CREDENTIALS = true
-    OpenAPI.BASE = process.env.BACK_HOST as string
+const getEvents = async ({limit, page}: getEventsProps) => {
+    getCredentials()
 
     try {
-        const response = await EventsService.getEventsApiEventsGet()
-        return response.events
+        const response = await EventsService.getEventsApiEventsGet(limit, page)
+        return {result: response.events, count: response.results}
     } catch (e) {
-        // @ts-ignore
-        throw new Error(e)
+        throw new Error(e as string)
     }
 }
 
@@ -42,8 +43,7 @@ const createEvent = async (data: CreateEventData) => {
             }
         }
     } catch (e) {
-        // @ts-ignore
-        throw new Error(e)
+        throw new Error(e as string)
     }
 
 }
@@ -54,14 +54,37 @@ const deleteEvents = async (eventIds: Array<number>) => {
     try {
         await Promise.all(eventIds.map(async (eventId: number) => EventsService.deleteEventApiEventsEventIdDelete(eventId)))
     } catch (e) {
-        // @ts-ignore
-        throw new Error(e)
+        throw new Error(e as string)
     }
 
+}
+
+const publishEvents = async (eventIds: Array<number>) => {
+    getCredentials()
+
+    try {
+        await Promise.all(
+            eventIds.map(
+                async (eventId: number) => EventsService.updateEventApiEventsEventIdPatch(eventId, {published: true})))
+    } catch (e) {
+        throw new Error(e as string)
+    }
+}
+
+const unPublishEvents = async (eventIds: Array<number>) => {
+    getCredentials()
+
+    try {
+        await Promise.all(eventIds.map(async (eventId: number) => EventsService.updateEventApiEventsEventIdPatch(eventId, {published: false})))
+    } catch (e) {
+        throw new Error(e as string)
+    }
 }
 
 export {
     getEvents,
     createEvent,
-    deleteEvents
+    deleteEvents,
+    publishEvents,
+    unPublishEvents
 }

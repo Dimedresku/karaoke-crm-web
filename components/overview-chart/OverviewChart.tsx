@@ -1,17 +1,12 @@
 import PropTypes from 'prop-types';
 import ArrowPathIcon from '@heroicons/react/24/solid/ArrowPathIcon';
-import ArrowRightIcon from '@heroicons/react/24/solid/ArrowRightIcon';
-import {
-    Button,
-    Card,
-    CardActions,
-    CardContent,
-    CardHeader,
-    Divider,
-    SvgIcon
-} from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
-import { Chart } from '../chart';
+import {Button, Card, CardContent, CardHeader, SvgIcon} from '@mui/material';
+import {alpha, useTheme} from '@mui/material/styles';
+import {Chart} from '../chart';
+import {useEffect, useState} from "react";
+import {getOverviewStatistic} from "../../service/api/reservationsApi";
+import {StatisticType} from "../../openaip";
+import {getLastDaysMap} from "../../utils/get-date-maps";
 
 const useChartOptions = () => {
     const theme = useTheme();
@@ -94,7 +89,6 @@ const useChartOptions = () => {
         },
         yaxis: {
             labels: {
-                formatter: (value: number) => (value > 0 ? `${value}K` : `${value}`),
                 offsetX: -10,
                 style: {
                     colors: theme.palette.text.secondary
@@ -104,14 +98,62 @@ const useChartOptions = () => {
     };
 };
 
-type OverviewSalesProps = {
-    chartSeries: unknown,
+type OverviewChartProps = {
     sx: object
 }
 
-export const OverviewSales = (props: OverviewSalesProps) => {
-    const { chartSeries, sx } = props;
-    const chartOptions = useChartOptions();
+const defaultSeries = [
+    {
+        name: 'Reserved',
+        data: [18, 16, 5, 8, 3, 14, 14, 16, 17, 19, 18, 20]
+    },
+    {
+        name: 'Served',
+        data: [12, 11, 4, 6, 2, 9, 9, 10, 11, 12, 13, 13]
+    }
+]
+
+export const OverviewChart = (props: OverviewChartProps) => {
+    const { sx } = props;
+    const [type, setType] = useState(StatisticType.WEEK)
+    const [chartSeries, setSeries] = useState(defaultSeries)
+    const [options, setOptions] = useState(useChartOptions())
+
+    useEffect(() => {
+        getOverviewStatistic(type).then((result) => {
+            const daysMap = getLastDaysMap(result, type)
+            getChartData(daysMap)
+        })
+    }, [type])
+
+    const getChartData = (data: Map<string, any>) => {
+        const reserved = []
+        const served = []
+        const daysLabel = []
+        for (const [date_label, value] of data) {
+            daysLabel.push(date_label)
+            reserved.push(value.reserved_count || 0)
+            served.push(value.served_count || 0)
+        }
+        setSeries([
+            {
+                name: 'Reserved',
+                data: reserved
+            },
+            {
+                name: 'Served',
+                data: served
+            }])
+
+        setOptions((prev) => {
+            const newXaxis = {...prev.xaxis, categories: daysLabel}
+            return {...prev, xaxis: newXaxis}
+        })
+    }
+
+    const toggleType = () => {
+        setType((prev) => prev == StatisticType.WEEK ? StatisticType.MONTH : StatisticType.WEEK)
+    }
 
     return (
         <Card sx={sx}>
@@ -125,40 +167,27 @@ export const OverviewSales = (props: OverviewSalesProps) => {
                                 <ArrowPathIcon />
                             </SvgIcon>
                         )}
+                        onClick={toggleType}
                     >
-                        Sync
+                        {type}
                     </Button>
                 )}
-                title="Sales"
+                title="Reserveds"
             />
             <CardContent>
                 <Chart
                     height={350}
-                    options={chartOptions}
+                    options={options}
                     series={chartSeries}
                     type="bar"
                     width="100%"
                 />
             </CardContent>
-            {/*<Divider />*/}
-            {/*<CardActions sx={{ justifyContent: 'flex-end' }}>*/}
-            {/*    <Button*/}
-            {/*        color="inherit"*/}
-            {/*        endIcon={(*/}
-            {/*            <SvgIcon fontSize="small">*/}
-            {/*                <ArrowRightIcon />*/}
-            {/*            </SvgIcon>*/}
-            {/*        )}*/}
-            {/*        size="small"*/}
-            {/*    >*/}
-            {/*        Overview*/}
-            {/*    </Button>*/}
-            {/*</CardActions>*/}
         </Card>
     );
 };
 
-OverviewSales.protoTypes = {
+OverviewChart.protoTypes = {
     chartSeries: PropTypes.array.isRequired,
     sx: PropTypes.object
 };

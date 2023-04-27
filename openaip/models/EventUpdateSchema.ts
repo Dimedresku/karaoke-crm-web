@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type EventUpdateSchema = {
-    name: string;
-    description: string;
+    name?: string;
+    description?: string;
     published?: boolean;
 };

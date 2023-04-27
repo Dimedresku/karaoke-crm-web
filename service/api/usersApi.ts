@@ -1,14 +1,17 @@
-import {UsersService, OpenAPI, CreateUser, UpdateUser} from "../../openaip";
+import {UsersService, CreateUser, UpdateUser} from "../../openaip";
 import {getCredentials} from "./common";
 
-const getUsers = async (token: string) => {
-    OpenAPI.TOKEN = token
-    OpenAPI.WITH_CREDENTIALS = true
-    OpenAPI.BASE = process.env.BACK_HOST as string
+type getUserProps = {
+    limit: number,
+    page: number
+}
+
+const getUsers = async ({limit, page}: getUserProps) => {
+    getCredentials()
 
     try {
-        const response = await UsersService.getAllUsersApiUsersGet()
-        return response.users
+        const response = await UsersService.getAllUsersApiUsersGet(limit, page)
+        return {result: response.users, count: response.result}
     } catch (e) {
         // @ts-ignore
         throw new Error(e)
@@ -41,6 +44,7 @@ const deleteUsers = async (userIds: Array<number>) => {
 
 const uploadAvatar = async (user_id: number, file: File) => {
     getCredentials()
+
     try {
         await UsersService.uploadImageApiUsersUserIdUploadImagePost(user_id, {file: file})
     } catch (e) {

@@ -1,9 +1,15 @@
-import {OpenAPI, ReservationUpdateSchema, ReservationCreateSchema} from "../../openaip";
-import {ReservationsService} from "../../openaip";
+import {ReservationCreateSchema, ReservationsService, ReservationUpdateSchema, StatisticType} from "../../openaip";
 import {getCredentials} from "./common";
 import dayjs from "dayjs";
 
-const getReservations = async (limit: number, page: number, order: string) => {
+
+type getReservationsProps = {
+    limit: number,
+    page: number,
+    order: string
+}
+
+const getReservations = async ({limit, page, order}: getReservationsProps) => {
     getCredentials()
 
     try {
@@ -90,10 +96,32 @@ const disableServedReservation = async (idsArray: Array<number>) => {
     }
 }
 
+const getOverviewStatistic = async (type: StatisticType = StatisticType.WEEK) => {
+    getCredentials()
+    try {
+        return await ReservationsService.getReservationsStatisticsApiReservationsStatisticsGet(type)
+    } catch (e) {
+        throw new Error(e as string)
+    }
+}
+
+
+const getPeopleCountStatistic = async (type: StatisticType = StatisticType.WEEK) => {
+    getCredentials()
+    try {
+        return await ReservationsService.getReservationsStatisticsApiReservationsPeopleCountStatisticsGet(type)
+    } catch (e) {
+        throw new Error(e as string)
+    }
+}
+
+
 export {
     getReservations,
     createReservation,
     deleteReservation,
     servedReservation,
-    disableServedReservation
+    disableServedReservation,
+    getOverviewStatistic,
+    getPeopleCountStatistic
 }
