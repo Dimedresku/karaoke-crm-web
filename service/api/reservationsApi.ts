@@ -6,14 +6,19 @@ import dayjs from "dayjs";
 type getReservationsProps = {
     limit: number,
     page: number,
-    order: string
+    order?: string,
+    filterQuery?: object
 }
 
-const getReservations = async ({limit, page, order}: getReservationsProps) => {
+const getReservations = async ({limit, page, order = "", filterQuery = {}}: getReservationsProps) => {
     getCredentials()
 
+    const dateFrom = filterQuery.dateFrom ? filterQuery.dateFrom.format("YYYY-MM-DD") : null
+    const dateTo = filterQuery.dateTo ? filterQuery.dateTo.format("YYYY-MM-DD") : null
+
     try {
-        const response = await ReservationsService.getReservationsApiReservationsGet(limit, page, order)
+        const response = await ReservationsService.getReservationsApiReservationsGet(
+            limit, page, order, dateFrom, dateTo)
         return {result: response.reservations, count: response.results}
     } catch (e) {
         // @ts-ignore

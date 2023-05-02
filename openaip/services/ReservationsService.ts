@@ -61,6 +61,8 @@ type?: StatisticType,
      * @param limit 
      * @param page 
      * @param order 
+     * @param dateFrom 
+     * @param dateTo 
      * @returns any Successful Response
      * @throws ApiError
      */
@@ -68,6 +70,8 @@ type?: StatisticType,
 limit: number = 10,
 page: number = 1,
 order?: string,
+dateFrom?: string,
+dateTo?: string,
 ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -76,6 +80,8 @@ order?: string,
                 'limit': limit,
                 'page': page,
                 'order': order,
+                'date_from': dateFrom,
+                'date_to': dateTo,
             },
             errors: {
                 422: `Validation Error`,

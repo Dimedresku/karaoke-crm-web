@@ -16,7 +16,7 @@ const List = () => {
     const [rows, setRows] = useState([])
 
     useEffect(() => {
-        getReservations(5, 1, "").then((result) => {
+        getReservations({limit: 5, page: 1}).then((result) => {
             setRows(result.result)
         })
 

@@ -15,7 +15,9 @@ export const AuthJWTService = () => {
             const response = await AuthService.loginApiAuthLoginPost(credentials)
             if (response.status == 'success') {
                 const accessToken = response.access_token
+                const refreshToken = response.refresh_token
                 setToken(accessToken)
+                setRefreshToken(refreshToken)
                 return accessToken
             } else {
                 throw new Error("Invalid credentials")
@@ -53,28 +55,47 @@ export const AuthJWTService = () => {
         await AuthService.logoutApiAuthLogoutGet()
     }
 
-    const isAuthUser = async (token: string) => {
-        if (!token) {
-            return false
+    const getAuthToken = async (cookies: any) => {
+        let token = cookies.get("access_token")
+        const refreshToken = cookies.get("refresh_token")
+
+        if (!token && refreshToken) {
+            OpenAPI.TOKEN = refreshToken
+            const response = await AuthService.refreshTokenApiAuthRefreshPost()
+            token = response.access_token
         }
 
         const username = await checkAuthorization(token)
-        return !!username;
+        if (!username) {
+            return null
+        } else {
+            return token
+        }
     }
 
     const setToken = (token: string) => {
         localStorage.setItem('access_token', token)
     }
 
+    const setRefreshToken = (refreshToken: string) => {
+        localStorage.setItem('refresh_token', refreshToken)
+    }
+
     const getToken = () => {
         return localStorage.getItem('access_token')
+    }
+
+    const getRefreshToken = () => {
+        return localStorage.getItem('refresh_token')
     }
 
     return {
         login,
         logout,
-        isAuthUser,
+        getAuthToken,
         getToken,
-        getUser
+        getUser,
+        getRefreshToken,
+        setToken
     }
 }

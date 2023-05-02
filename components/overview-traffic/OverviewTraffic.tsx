@@ -100,7 +100,6 @@ export const OverviewTraffic = ({sx}: OverviewTrafficProps) => {
                     extraColorsArr.push(`#${extraColor}`)
                 }
             }
-            console.log(extraColorsArr)
             const options = getChartOptions(theme, labelsArr, [...defaultColors, ...extraColorsArr])
             setChartOptions(options)
             setChartSeries(series)

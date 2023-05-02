@@ -127,7 +127,7 @@ export const CustomTable = (props: CustomTableProps) => {
     const [load, setLoad] = useState(true)
     const [count, setCount] = useState(0)
     const [order, setOrder] = useState('')
-    const [filterQuery, setFilterQuery] = useState("")
+    const [filterQuery, setFilterQuery] = useState({})
     const [data, setData] = useState<any>([])
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const recordsIds = useRecordIds(data);

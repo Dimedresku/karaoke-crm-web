@@ -11,6 +11,24 @@ import type { ApiResult } from './ApiResult';
 import { CancelablePromise } from './CancelablePromise';
 import type { OnCancel } from './CancelablePromise';
 import type { OpenAPIConfig } from './OpenAPI';
+import {refreshToken} from "../../service/api/common";
+
+axios.interceptors.response.use(
+    (res) => {return res},
+    async (error) => {
+        const originalRequest = error.config
+        if (error.response.status == 401 && !originalRequest._retry) {
+            originalRequest._retry = true
+            const newToken = await refreshToken()
+            originalRequest.headers = {
+                ...originalRequest.headers,
+                authorization: `Bearer ${newToken}`
+            }
+            return await axios.request(originalRequest)
+        }
+        return Promise.reject(error)
+}
+    )
 
 const isDefined = <T>(value: T | null | undefined): value is Exclude<T, null | undefined> => {
     return value !== undefined && value !== null;

@@ -39,6 +39,56 @@ import getHumanDate from "../../utils/getHumanDate";
 import {SwitchInput} from "../../components/formComponents/switchInput";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { publishRefreshTable } from "../../utils/tableEvent";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import DateRangeFilter from "../../components/dateRangeFilter/dateRangeFilter";
+
+
+type ReservationTableUtilsProps = {
+    setFilterQuery: Function
+}
+
+
+const ReservationTableUtils = ({setFilterQuery}: ReservationTableUtilsProps) => {
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const id = open ? 'simple-popover' : undefined;
+    const [filterState, setFilterState] = useState({dateTo: null, dateFrom: null})
+    const [load, setLoad] = useState(true)
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setFilterQuery(filterState)
+        setAnchorEl(null);
+    };
+
+    return (
+        <>
+            <Stack direction="row" spacing={1}>
+                <Tooltip title="Filter list">
+                    <IconButton sx={{marginRight: 2}}
+                                aria-describedby={id}
+                                onClick={handleClick}
+                    >
+                        <FilterListIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack>
+            <DateRangeFilter open={open}
+                             anchorEl={anchorEl}
+                             handleClose={handleClose}
+                             id={id}
+                             loading={load}
+                             state={filterState}
+                             changeState={setFilterState}
+            />
+        </>
+    )
+}
+
 
 
 type ReservationTableToolBarProps = {
@@ -204,6 +254,8 @@ const Reservations = () => {
                     fetchData={getReservations}
                     setError={setAlert}
                     tableName="Reservations"
+                    // @ts-ignore
+                    TableUtils={ReservationTableUtils}
                 />
                 <Stack spacing={2}
                        direction="row"
@@ -258,7 +310,6 @@ type ServerSideProps = {
 export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const authService = AuthJWTService()
     const cookies = new Cookies(req, res)
-    const token = cookies.get("access_token")
 
     const redirectObject = {
         redirect: {
@@ -267,8 +318,8 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         }
     }
 
-    const isAuth = await authService.isAuthUser(token)
-    if (!isAuth) {
+    const token = await authService.getAuthToken(cookies)
+    if (!token) {
         return redirectObject
     }
 

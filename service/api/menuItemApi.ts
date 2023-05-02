@@ -5,18 +5,14 @@ type getMenuItemsProps = {
     limit: number
     page: number
     order: string
-    filterQuery: string
+    filterQuery: object
 }
 
-const getMenuItems = async ({limit, page, order = "", filterQuery = ""}: getMenuItemsProps) => {
+const getMenuItems = async ({limit, page, order = "", filterQuery = {}}: getMenuItemsProps) => {
     getCredentials()
 
-    const filters = filterQuery?.split("&")
-    const rawCategory = filters?.filter(elem => elem.includes("category="))
-    const rawSubCategory = filters?.filter(elem => elem.includes("subCategory="))
-
-    const category = rawCategory.map(elem => elem.replace("category=", ""))
-    const subCategory = rawSubCategory.map(elem => elem.replace("subCategory=", ""))
+    const category = filterQuery.category as Array<MenuCategory> || []
+    const subCategory = filterQuery.subCategory as Array<string> || []
 
     try {
         const response = await MenuItemsService.getMenuItemsApiMenuItemsGet(

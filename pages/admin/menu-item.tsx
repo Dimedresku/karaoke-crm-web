@@ -83,19 +83,18 @@ const MenuItemsTableUtils = ({setFilterQuery}: MenuItemsTableUtilsProps) => {
     }, [])
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log(MenuCategory)
         setAnchorEl(event.currentTarget);
     };
     const handleClose = () => {
-        let filterParams = ''
+        let filterParams = {category: [] as Array<string>, subCategory: [] as Array<string>}
         if (!Object.values(filterState).every(treeState => treeState.state)) {
             const filters = Object.entries(filterState)
             for (const [parentName, treeState] of filters) {
                 if (treeState.state) {
-                    filterParams += `&category=${parentName}`
+                    filterParams.category.push(parentName)
                 } else {
                     for (const [childrenName, state] of Object.entries(treeState.children)) {
-                        if (state) {filterParams += `&subCategory=${childrenName}`}
+                        if (state) {filterParams.subCategory.push(childrenName)}
                     }
                 }
             }
@@ -276,7 +275,6 @@ type ServerSideProps = {
 export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const authService = AuthJWTService()
     const cookies = new Cookies(req, res)
-    const token = cookies.get("access_token")
 
     const redirectObject = {
         redirect: {
@@ -285,8 +283,8 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         }
     }
 
-    const isAuth = await authService.isAuthUser(token)
-    if (!isAuth) {
+    const token = await authService.getAuthToken(cookies)
+    if (!token) {
         return redirectObject
     }
 

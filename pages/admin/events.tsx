@@ -160,7 +160,6 @@ type ServerSideProps = {
 export const getServerSideProps = async ({req, res}: ServerSideProps) => {
     const authService = AuthJWTService()
     const cookies = new Cookies(req, res)
-    const token = cookies.get("access_token")
 
     const redirectObject = {
         redirect: {
@@ -169,8 +168,8 @@ export const getServerSideProps = async ({req, res}: ServerSideProps) => {
         }
     }
 
-    const isAuth = await authService.isAuthUser(token)
-    if (!isAuth) {
+    const token = await authService.getAuthToken(cookies)
+    if (!token) {
         return redirectObject
     }
 
